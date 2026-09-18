@@ -34,6 +34,7 @@ class Camera {
         DataStructures::Vector getPosition() const;
         DataStructures::Vector getDirection() const;
         DataStructures::Vector getUp() const;
+        std::array<double, 2> getNearFarPlanes() const;
         double getFov() const;
         double getAspectRatio() const;
 

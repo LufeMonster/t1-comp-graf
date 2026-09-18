@@ -17,7 +17,7 @@ Camera::Camera(const Vector& position, double pitch, double yaw, double roll, co
     this->fov = fov;
     this->aspectRatio = aspectRatio;
     this->nearPlane = 0.1;
-    this->farPlane = 100.0;
+    this->farPlane = 1000.0;
 
     this->initialParameters = {position, up, pitch, yaw, roll, fov, aspectRatio, 0.1, 100.0};
 }
@@ -89,6 +89,10 @@ Vector Camera::getDirection() const {
 
 Vector Camera::getUp() const {
     return up;
+}
+
+array<double, 2> Camera::getNearFarPlanes() const {
+    return array<double, 2> {nearPlane, farPlane};
 }
 
 double Camera::getFov() const {
