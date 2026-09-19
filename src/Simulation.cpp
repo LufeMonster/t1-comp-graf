@@ -9,8 +9,8 @@ using namespace DataStructures;
 Simulation* Simulation::instance = nullptr;
 
 // --- Class constructor and destructor ---
-Simulation::Simulation(Camera* camera) : 
-    camera(camera), lastMouseX(0), lastMouseY(0), isMousePressed(false), isShiftPressed(false), previousTime(0), deltaTime(0.0) {
+Simulation::Simulation(Camera* camera, PhysicsWorld* physicsWorld) : 
+    camera(camera), physicsWorld(physicsWorld), lastMouseX(0), lastMouseY(0), isMousePressed(false), isShiftPressed(false), previousTime(0), deltaTime(0.0) {
 
     instance = this;
     for(int i = 0; i < 256; i++) keyStates[i] = false;
@@ -36,7 +36,7 @@ void Simulation::updateSimulation() {
 
     // --- Smooth camera movement ---
     // Scale speed based on SHIFT press
-    double speedValue = isShiftPressed ? 60.0 : 20.0;
+    double speedValue = isShiftPressed ? (BASE_PLAYER_SPEED * 4) : BASE_PLAYER_SPEED;
     double translationSpeed = speedValue * deltaTime;
 
     if (keyStates['w']) camera->moveForwardBackward(translationSpeed);
@@ -48,9 +48,9 @@ void Simulation::updateSimulation() {
 
     // --- Physics simulation ---
     // Always pass 'deltaTime' to your physics functions! 
-    // Example:
-    // object->updatePosition(objectVelocity * deltaTime); 
-    // applyGravity(deltaTime);
+    if (physicsWorld != nullptr) {
+        physicsWorld->step(deltaTime/4.0);
+    }
 
     glutPostRedisplay();
 }

@@ -26,6 +26,16 @@ namespace DataStructures {
         return result;
     }
 
+    Vector multiplyVectorScalar(const Vector& v, double scalar) {
+        Vector result;
+        
+        for (int i = 0; i < DIMENSION; ++i) {
+            result[i] = v[i] * scalar;
+        }
+        
+        return result;
+    }
+    
     Vector addVectors(const Vector& u, const Vector& v) {
         Vector result{};
 

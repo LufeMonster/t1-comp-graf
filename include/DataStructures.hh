@@ -25,6 +25,7 @@ namespace DataStructures {
     // Function declarations:
     // ================================================================
     Vector normalize(const Vector& v);
+    Vector multiplyVectorScalar(const Vector& v, double scalar);
     Vector addVectors(const Vector& u, const Vector& v);
     Vector multiplyHMatrixVector(const HomogeneousMatrix& A, const Vector& v);
     HomogeneousMatrix multiplyHMatrices(const HomogeneousMatrix& A, const HomogeneousMatrix& B);

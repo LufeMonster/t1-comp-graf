@@ -3,11 +3,12 @@
 #define SIMULATION_HH
 
 #include "../include/Camera.hh"
+#include "../include/PhysicsWorld.hh"
 
 class Simulation {
     public:
         // --- Class constructor and destructor ---
-        Simulation(Camera* camera = nullptr);
+        Simulation(Camera* camera = nullptr, PhysicsWorld* physicsWorld = nullptr);
         ~Simulation();
 
         // ================================================================
@@ -37,12 +38,14 @@ class Simulation {
         // Constants:
         // ================================================================
         static constexpr int TIMER = 16; // in milliseconds (16 ms = ~60 FPS)
+        static constexpr double BASE_PLAYER_SPEED = 30; // in units per second
 
         // ================================================================
         // Class object-pointers:
         // ================================================================
         static Simulation* instance; 
         Camera* camera;
+        PhysicsWorld* physicsWorld;
 
         // ================================================================
         // Keyboard & mouse handling variables:

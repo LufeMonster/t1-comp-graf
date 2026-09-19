@@ -2,23 +2,65 @@
 #include "../include/DataStructures.hh"
 #include "../include/Camera.hh"
 #include "../include/Simulation.hh"
+#include "../include/Mesh.hh"
+#include "../include/CelestialBody.hh"
+#include "../include/PhysicsWorld.hh"
 #include <GL/glut.h>
+#include <cmath>
 #include <iostream>
 using namespace std;
 using namespace DataStructures;
 
 const Vector initialCameraPosition = {50, 50, 300};
 Camera* camera(new Camera(initialCameraPosition, 0.0, 3.14159, 0.0, {0, 1, 0}, 45.0, 1.333)); // 1.5708 3.14159
-Simulation simulation(camera);
 
 array<int, 2> windowWidthHeight = {1024, 576};
 
+// ================================================================
+// Scene setup:
+// ================================================================
+// NOTE: these mass/distance/G values are scaled for a visually pleasant simulation,
+// not real astronomical units (real values would be either invisibly tiny or huge on screen).
+PhysicsWorld* physicsWorld(new PhysicsWorld(/* gravitationalConstant = */ 500.0));
+ 
+CelestialBody* sun(new CelestialBody(
+    "Sun", /* mass = */ 20000.0, /* radius = */ 30.0,
+    /* position = */ {0.0, 0.0, 0.0},
+    /* velocity = */ {0.0, 0.0, 0.0},
+    Mesh::generateSphere(30.0, 24, 24, YELLOW)
+));
+ 
+CelestialBody* earth(new CelestialBody(
+    "Earth", /* mass = */ 100.0, /* radius = */ 8.0,
+    /* position = */ {200.0, 0.0, 0.0},
+    // Circular-orbit approximation: v = sqrt(G * M_sun / r), tangential to the Sun
+    /* velocity = */ {0.0, 0.0, sqrt(500.0 * 20000.0 / 200.0)},
+    Mesh::generateSphere(8.0, 16, 16, BLUE)
+));
+
+
+// CelestialBody* moon(new CelestialBody(
+//     "Moon", /* mass = */ 1.0, /* radius = */ 2.0,
+//     /* position = */ {220.0, 0.0, 0.0}, // 20 units from Earth
+//     // Earth's velocity plus the Moon's own orbital velocity around Earth
+//     /* velocity = */ {0.0, 0.0, sqrt(500.0 * 20000.0 / 200.0) + sqrt(500.0 * 100.0 / 20.0)},
+//     Mesh::generateSphere(2.0, 12, 12, RED)
+// ));
+
+Simulation simulation(camera, physicsWorld);
+
 void initOpenGL(void) {
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(LIGHT_GRAY[0], LIGHT_GRAY[1], LIGHT_GRAY[2], 1.0f);
 
     glEnable(GL_DEPTH_TEST);   // activate the zBuffer
 
 	camera->setFov(45.0);
+
+    // --- Registers the bodies with the physics world ---
+    physicsWorld->addBody(sun);
+    physicsWorld->addBody(earth);
+    //physicsWorld->addBody(moon);
 }
 
 array<double, 2> nearFarPlane;
@@ -53,12 +95,7 @@ void draw(void) {
     // Shapes to draw:
     // ================================================================
 
-    glColor3f(1.0f, 0.5f, 0.0f);
-    glPushMatrix();
-        //glTranslated(0, 0, 0);
-        glutWireTeapot(50.0f);  
-	    // glColor3f(0.0f, 0.5f, 0.5f); glutWireSphere(50, 20, 20); glColor3f(0.0f, 0.0f, 1.0f); glutWireCube(50.0);
-    glPopMatrix();
+    physicsWorld->renderAll(); // draws every registered CelestialBody at its current Transform
 
     glutSwapBuffers();
 }

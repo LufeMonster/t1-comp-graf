@@ -1,6 +1,7 @@
 // Camera.cpp
 #include "../include/Camera.hh"
 #include <cmath>
+#include <algorithm>
 using namespace std;
 using namespace DataStructures;
 
@@ -10,7 +11,7 @@ Camera::Camera(const Vector& position, double pitch, double yaw, double roll, co
     this->direction = {cos(pitch) * sin(yaw), sin(pitch), cos(pitch) * cos(yaw)};
     this->up = up;
 
-    this->pitch = pitch;
+    this->pitch = clamp(pitch, -1.56905, 1.56905);
     this->yaw = yaw;
     this->roll = roll;
 
@@ -34,7 +35,7 @@ void Camera::setPosition(const Vector& pos) {
 }
 
 void Camera::setRotation(double pitch, double yaw, double roll) {
-    this->pitch = pitch;
+    this->pitch = clamp(pitch, -1.56905, 1.56905);
     this->yaw = yaw;
     this->roll = roll;
     direction[0] = cos(pitch) * sin(yaw);
@@ -111,17 +112,19 @@ void Camera::move(const Vector& translation) {
 }
 
 void Camera::moveForwardBackward(double distance) {
-    Vector translation = {direction[0] * distance, 0, direction[2] * distance};
+    Vector translation = normalize({direction[0], 0, direction[2]});
+    translation = multiplyVectorScalar(translation, distance);
     position = addVectors(position, translation);
 }
 
 void Camera::moveLeftRight(double distance) {
-    Vector translation = {direction[2] * distance, 0, -direction[0] * distance};
+    Vector translation = normalize({direction[2], 0, -direction[0]});
+    translation = multiplyVectorScalar(translation, distance);
     position = addVectors(position, translation);
 }
     
 void Camera::updateRotation(double deltaPitch, double deltaYaw) {
-    this->pitch += deltaPitch;
+    this->pitch = clamp(this->pitch + deltaPitch, -1.56905, 1.56905); // Apply the rotation change and strictly bound it between -89.9 and 89.9 degrees
     this->yaw   += deltaYaw;
     direction[0] = cos(this->pitch) * sin(this->yaw);
     direction[1] = sin(this->pitch);
