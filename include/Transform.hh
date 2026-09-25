@@ -3,49 +3,37 @@
 #define TRANSFORM_H
 
 #include "../include/DataStructures.hh"
+#include <vector>
 
-class Transform {
-    public:
-        // --- Class constructor ---
-        Transform(const DataStructures::Vector& position = {0.0, 0.0, 0.0},
-                  const DataStructures::Vector& rotation = {0.0, 0.0, 0.0},
-                  const DataStructures::Vector& scale = {1.0, 1.0, 1.0});
+namespace Transform {
 
-        // ================================================================
-        // Setters and getters:
-        // ================================================================
-        void setPosition(const DataStructures::Vector& position);
-        void setRotation(const DataStructures::Vector& rotation); // pitch (X), yaw (Y), roll (Z), in radians
-        void setScale(const DataStructures::Vector& scale);
+    // ================================================================
+    // In-place point transformations:
+    // ================================================================
+    void translate(DataStructures::Vector& point, const DataStructures::Vector& translation);
+    void translate(std::vector<DataStructures::Vector>& points, const DataStructures::Vector& translation);
 
-        DataStructures::Vector getPosition() const;
-        DataStructures::Vector getRotation() const;
-        DataStructures::Vector getScale() const;
+    void rotate(DataStructures::Vector& point, const DataStructures::Vector& rotationCenter,
+                double pitch, double yaw, double roll);
+    void rotate(std::vector<DataStructures::Vector>& points, const DataStructures::Vector& rotationCenter,
+                double pitch, double yaw, double roll);
 
-        // ================================================================
-        // Transform operations:
-        // ================================================================
-        void translate(const DataStructures::Vector& delta);
-        void rotate(const DataStructures::Vector& delta);
-        void scaleBy(const DataStructures::Vector& factor);
+    void scale(DataStructures::Vector& point, const DataStructures::Vector& scaleCenter, double scaleFactor);
+    void scale(std::vector<DataStructures::Vector>& points, const DataStructures::Vector& scaleCenter, double scaleFactor);
 
-        // ================================================================
-        // Matrix composition:
-        // ================================================================
-        // Builds the model matrix as Translation * Rotation * Scale
-        DataStructures::HomogeneousMatrix getModelMatrix() const;
+    // ================================================================
+    // Matrix builders:
+    // ================================================================
+    DataStructures::HomogeneousMatrix getTranslationMatrix(const DataStructures::Vector& translation);
+    DataStructures::HomogeneousMatrix getRotationMatrix(const DataStructures::Vector& rotationCenter,
+                                                          double pitch, double yaw, double roll);
+    DataStructures::HomogeneousMatrix getScaleMatrix(const DataStructures::Vector& scaleCenter, double scaleFactor);
 
-        // ================================================================
-        // OpenGL application:
-        // ================================================================
-        // Multiplies the current OpenGL matrix by this transform's model matrix.
-        // Should be wrapped between glPushMatrix()/glPopMatrix() by the caller.
-        void applyGL() const;
-
-    private:
-        DataStructures::Vector position;
-        DataStructures::Vector rotation; // pitch, yaw, roll (radians)
-        DataStructures::Vector scale;
-};
+    // ================================================================
+    // Matrix application:
+    // ================================================================
+    void applyMatrix(DataStructures::Vector& point, const DataStructures::HomogeneousMatrix& matrix);
+    void applyMatrix(std::vector<DataStructures::Vector>& points, const DataStructures::HomogeneousMatrix& matrix);
+}
 
 #endif

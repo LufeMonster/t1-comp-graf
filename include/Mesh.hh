@@ -7,7 +7,7 @@
 
 class Mesh {
     public:
-        // A face is a list of indices into the vertex array (supports triangles, quads and n-gons)
+        // A face is a list of indices into the vertex array
         using Face = std::vector<int>;
 
         // --- Class constructors ---
@@ -25,9 +25,16 @@ class Mesh {
         DataStructures::ColorVector getColor() const;
 
         // ================================================================
+        // Visual transformations:
+        // ================================================================
+        // Rotate/scale recompute face normals afterwards
+        void translate(const DataStructures::Vector& translation);
+        void rotate(const DataStructures::Vector& rotationCenter, double pitch, double yaw, double roll);
+        void scale(const DataStructures::Vector& scaleCenter, double scaleFactor);
+
+        // ================================================================
         // Normal computation:
         // ================================================================
-        // Computes one flat normal per face, from its first three vertices
         void computeFaceNormals();
 
         // ================================================================
@@ -39,6 +46,7 @@ class Mesh {
         // ================================================================
         // Primitive factories:
         // ================================================================
+        // Generated centered at the origin - translate() the result to place it in the scene.
         static Mesh generateSphere(double radius, int stacks, int slices,
                                     const DataStructures::ColorVector& color = DataStructures::WHITE);
         // Returns a single closed loop of points - call renderWireframe() to draw it as an orbit path

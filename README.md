@@ -8,10 +8,10 @@ The project follows a separation of responsibilities very close to what's used i
 
 ```
 DataStructures   -> pure math (Vector, Matrix, HomogeneousMatrix) + OpenGL wrappers + colors
-Transform        -> position, rotation and scale of an object in space
-Mesh             -> geometry (vertices, faces, normals) and rendering
-RigidBody        -> mass, velocity, force accumulation and motion integration
-CelestialBody    -> combines Transform + Mesh + RigidBody into one astronomical body (Sun, Earth, Moon...)
+Transform        -> stateless point/vector transformation utilities (translate, rotate, scale, matrix builders)
+RigidBody        -> mass, velocity, position, force accumulation and motion integration
+Mesh             -> geometry (vertices, faces, normals), visual rotation/scale and rendering
+CelestialBody    -> combines RigidBody + Mesh into one astronomical body (Sun, Earth, Moon...)
 PhysicsWorld     -> manages every CelestialBody, computes N-body gravity and steps the simulation forward
 Camera           -> camera position/orientation and projection
 Simulation       -> keyboard/mouse input and the time loop (deltaTime)
@@ -24,36 +24,39 @@ The math foundation everything else builds on. Defines `Vector`, `Matrix`, `Homo
 
 Also bundles an OpenGL layer: the `gl` struct wraps calls like `glVertex3dv`/`glNormal3dv`/`glColor3fv` so custom `Vector`/`ColorVector` types can be passed straight into OpenGL without manual conversion, and a set of predefined `ColorVector` constants (`WHITE`, `RED`, `BLUE`, `YELLOW`, etc.) are used throughout the other classes for consistent coloring.
 
-### `Transform`
-Holds an object's position, rotation (pitch/yaw/roll, in radians) and scale. Knows how to compose these three into a `HomogeneousMatrix` (`getModelMatrix()`) and apply it directly to OpenGL's matrix stack (`applyGL()`, meant to be used between `glPushMatrix()`/`glPopMatrix()`).
+### `Transform` (namespace)
+A stateless collection of point-transformation utilities - a namespace rather than a class, since (like `DataStructures`) it holds no state of its own: every function just operates on the `Vector`(s) or matrix it's given, mirroring the `crossProduct`/`multiplyHMatrices`-style free functions already used elsewhere in the project.
 
-Keeping this separate from `Camera` makes sense because the camera has its own aiming/direction logic (`lookAt`, `updateRotation`, etc.), while a planet just needs a "generic" position/rotation/scale.
+Translation is the only transformation that doesn't depend on a reference point; rotation and scale both need a **center** they're performed around (built internally by sandwiching the raw rotation/scale matrix between a translation to the center and back: `T(center) * R * T(-center)`). Two families of functions are provided:
 
-### `Mesh`
-Holds vertices, faces (lists of indices — supports triangles, quads or larger polygons) and per-face normals. It provides:
-- `render()` — draws the filled faces using the `DataStructures::gl` wrappers;
-- `renderWireframe()` — draws them as `GL_LINE_LOOP`, useful for orbits or debugging;
-- `generateSphere(radius, stacks, slices, color)` — generates a UV sphere, ideal for planets/moons/the sun;
-- `generateOrbitRing(radius, segments, color)` — generates a ring of points on the XZ plane, for drawing an orbital path.
+- **In-place mutators** - `translate`, `rotate`, `scale`, each overloaded for a single `Vector&` or a `std::vector<Vector>&` (since the list can be of variable length). They mutate their argument directly and return nothing.
+- **Matrix builders + application** - `getTranslationMatrix`, `getRotationMatrix(rotationCenter, pitch, yaw, roll)` and `getScaleMatrix(scaleCenter, scaleFactor)` return the corresponding `HomogeneousMatrix`, and `applyMatrix` applies a (possibly pre-composed) matrix to a single `Vector` or a `std::vector<Vector>`. Useful when you want to combine several transformations into one matrix before applying it once, instead of mutating the same points repeatedly.
 
 ### `RigidBody`
-A purely physical component: mass, velocity and a force accumulator (`applyForce`/`clearForces`). `integrate(position, deltaTime)` advances velocity and position using **semi-implicit (symplectic) Euler integration** (more energy-stable than explicit Euler — important for orbits, which would otherwise show noticeable energy drift over time with the naive method).
+The physical representation of a body: mass, velocity, accumulated force, and now also **position** - it lives here rather than in a separate transform component, since position is a physical quantity that the simulation (gravity, integration) is directly responsible for. `integrate(deltaTime)` advances velocity and position using **semi-implicit (symplectic) Euler integration** (more energy-stable than explicit Euler - important for orbits, which would otherwise show noticeable energy drift over time), applies the resulting displacement to its own position via `Transform::translate`, clears the accumulated force, and **returns the change in position** so the caller can move the visual mesh by the same amount.
+
+### `Mesh`
+Holds vertices, faces (lists of indices - supports triangles, quads or larger polygons) and per-face normals, and keeps its vertices in **world space** directly rather than relying on a separate model matrix applied at render time. `translate`/`rotate`/`scale` are thin wrappers that hand the vertex list to the corresponding `Transform` function - rotation and scale need a reference point (typically the body's current position, for spinning or resizing in place) and recompute face normals afterwards, since those change face orientation; translation leaves normals unchanged. It also provides:
+- `render()` - draws the filled faces using the `DataStructures::gl` wrappers;
+- `renderWireframe()` - draws them as `GL_LINE_LOOP`, useful for orbits or debugging;
+- `generateSphere(radius, stacks, slices, color)` - generates a UV sphere centered at the origin, ideal for planets/moons/the sun;
+- `generateOrbitRing(radius, segments, color)` - generates a ring of points on the XZ plane, for drawing an orbital path.
 
 ### `CelestialBody`
-A composition of `Transform` + `RigidBody` + `Mesh`, plus a name and a physical radius (used for gravity/collision calculations, independent of the render scale). Represents a single astronomical body.
+A composition of `RigidBody` + `Mesh`, plus a name and a physical radius (used for gravity/collision calculations, independent of the render scale). Its constructor moves the (origin-centered) mesh to the body's initial position once; from then on, `advance(deltaTime)` integrates the `RigidBody` and translates the `Mesh` by the resulting delta, keeping the physical and visual positions in sync, and `spin(pitch, yaw, roll)` rotates the mesh around the body's current position for axial rotation. `render()` simply draws the mesh, since it already lives in world space.
 
 ### `PhysicsWorld`
-Keeps a list of pointers to `CelestialBody` (it does not own the memory — whoever creates the bodies is responsible for them) and, on every `step(deltaTime)`:
-1. Computes the gravitational force between **every pair** of bodies (O(n²), fine for a handful of bodies — Sun/Earth/Moon, etc.);
+Keeps a list of pointers to `CelestialBody` (it does not own the memory - whoever creates the bodies is responsible for them) and, on every `step(deltaTime)`:
+1. Computes the gravitational force between **every pair** of bodies (O(n²), fine for a handful of bodies - Sun/Earth/Moon, etc.), using each body's `getPosition()`;
 2. Applies the law of universal gravitation (`F = G·m₁·m₂/r²`);
-3. Integrates each body's motion through its `RigidBody`.
+3. Calls `advance(deltaTime)` on every body, which integrates its `RigidBody` and keeps its `Mesh` in sync.
 
 It also exposes `renderAll()` to draw every body at once.
 
 ### `Camera`
 Represents the viewer's position and orientation in the scene. Stores `position`, a `direction` vector derived from `pitch`/`yaw` (spherical-to-Cartesian conversion), an `up` vector, and the projection parameters (`fov`, `aspectRatio`, `nearPlane`, `farPlane`). Also snapshots its construction-time parameters into `initialParameters`, so the camera can be reset on demand.
 
-`getCameraParameters()` packs eye/target/up into a `Matrix` ready to feed straight into `gluLookAt`. Movement is split into `move` (free translation), `moveForwardBackward`/`moveLeftRight` (movement relative to where the camera is facing, ignoring the Y axis — i.e. it walks rather than flies), and rotation via `updateRotation` (mouse-look style, accumulating pitch/yaw deltas) or `lookAt` (points the camera directly at a target).
+`getCameraParameters()` packs eye/target/up into a `Matrix` ready to feed straight into `gluLookAt`. Movement is split into `move` (free translation), `moveForwardBackward`/`moveLeftRight` (movement relative to where the camera is facing, ignoring the Y axis - i.e. it walks rather than flies), and rotation via `updateRotation` (mouse-look style, accumulating pitch/yaw deltas) or `lookAt` (points the camera directly at a target).
 
 ### `Simulation`
 Owns the GLUT-facing side of the program: keyboard/mouse input and the frame timer. Because GLUT callbacks are plain C function pointers (not member functions), `Simulation` keeps a single static `instance` pointer and a set of static wrapper functions (`glutKeyboardCallback`, `glutMouseCallback`, etc.) that forward each call to the real instance methods.
@@ -79,4 +82,4 @@ This keeps `Simulation` usable even without any physics bodies attached (e.g. wh
 - Add simple collision detection between bodies using `radius` (useful for detecting "impacts" or merging bodies);
 - Replace the O(n²) gravity computation with a Barnes-Hut tree if the number of bodies grows large;
 - Add texture support to `Mesh` (UV coordinates) to map planet textures;
-- Persist each `CelestialBody`'s initial state (the way `Camera` already does with `initialParameters`) to allow "resetting" the simulation.
+- Give `PhysicsWorld` (or `CelestialBody`) a way to snapshot and restore each body's initial position/velocity (the way `Camera` already does with `initialParameters`) to allow "resetting" the simulation.

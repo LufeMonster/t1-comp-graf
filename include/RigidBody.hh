@@ -4,16 +4,21 @@
 
 #include "../include/DataStructures.hh"
 
+// The physical representation of a body (position, velocity, forces)
 class RigidBody {
     public:
         // --- Class constructor ---
-        RigidBody(double mass = 1.0, const DataStructures::Vector& velocity = {0.0, 0.0, 0.0});
+        RigidBody(const DataStructures::Vector& position = {0.0, 0.0, 0.0},
+                  double mass = 1.0,
+                  const DataStructures::Vector& velocity = {0.0, 0.0, 0.0});
 
         // ================================================================
         // Setters and getters:
         // ================================================================
+        void setPosition(const DataStructures::Vector& position);
         void setMass(double mass);
         void setVelocity(const DataStructures::Vector& velocity);
+        DataStructures::Vector getPosition() const;
         double getMass() const;
         DataStructures::Vector getVelocity() const;
 
@@ -27,11 +32,12 @@ class RigidBody {
         // Integration:
         // ================================================================
         // Advances velocity and position by deltaTime using semi-implicit (symplectic) Euler
-        // integration - more energy-stable than explicit Euler for orbital mechanics.
-        // Clears the accumulated force afterwards.
-        void integrate(DataStructures::Vector& position, double deltaTime);
+        // integration, clears the accumulated force, and returns the resulting change in
+        // position - so the caller can move the visual Mesh by the same amount.
+        DataStructures::Vector integrate(double deltaTime);
 
     private:
+        DataStructures::Vector position;
         double mass;
         DataStructures::Vector velocity;
         DataStructures::Vector accumulatedForce;

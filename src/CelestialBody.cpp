@@ -1,6 +1,5 @@
 // CelestialBody.cpp
 #include "../include/CelestialBody.hh"
-#include <GL/glut.h>
 using namespace std;
 using namespace DataStructures;
 
@@ -8,10 +7,9 @@ using namespace DataStructures;
 CelestialBody::CelestialBody(const string& name, double mass, double radius,
                               const Vector& initialPosition, const Vector& initialVelocity,
                               const Mesh& mesh)
-    : name(name), radius(radius),
-      transform(initialPosition, {0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}),
-      rigidBody(mass, initialVelocity),
-      mesh(mesh) {
+    : name(name), radius(radius), rigidBody(initialPosition, mass, initialVelocity), mesh(mesh) {
+    // The Mesh is generated centered at the origin, so it's moved to the body's initial position once here, and kept in sync afterwards through advance().
+    this->mesh.translate(initialPosition);
 }
 
 // ================================================================
@@ -25,12 +23,8 @@ double CelestialBody::getRadius() const {
     return radius;
 }
 
-Transform& CelestialBody::getTransform() {
-    return transform;
-}
-
-const Transform& CelestialBody::getTransform() const {
-    return transform;
+Vector CelestialBody::getPosition() const {
+    return rigidBody.getPosition();
 }
 
 RigidBody& CelestialBody::getRigidBody() {
@@ -50,11 +44,20 @@ const Mesh& CelestialBody::getMesh() const {
 }
 
 // ================================================================
+// Simulation:
+// ================================================================
+void CelestialBody::advance(double deltaTime) {
+    Vector deltaPosition = rigidBody.integrate(deltaTime);
+    mesh.translate(deltaPosition);
+}
+
+void CelestialBody::spin(double pitch, double yaw, double roll) {
+    mesh.rotate(rigidBody.getPosition(), pitch, yaw, roll);
+}
+
+// ================================================================
 // Rendering:
 // ================================================================
 void CelestialBody::render() const {
-    glPushMatrix();
-    transform.applyGL();
     mesh.render();
-    glPopMatrix();
 }

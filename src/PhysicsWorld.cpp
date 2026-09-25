@@ -25,22 +25,18 @@ void PhysicsWorld::step(double deltaTime) {
     computeGravitationalForces();
 
     for (CelestialBody* body : bodies) {
-        Vector position = body->getTransform().getPosition();
-        body->getRigidBody().integrate(position, deltaTime);
-        body->getTransform().setPosition(position);
+        body->advance(deltaTime);
     }
 }
 
 void PhysicsWorld::computeGravitationalForces() {
-    // Naive O(n^2) pairwise gravity - perfectly fine for a small number of bodies
-    // (Sun, Earth, Moon, etc.). Swap for a Barnes-Hut octree if the body count grows large.
     for (size_t i = 0; i < bodies.size(); ++i) {
         for (size_t j = i + 1; j < bodies.size(); ++j) {
             CelestialBody* a = bodies[i];
             CelestialBody* b = bodies[j];
 
-            Vector posA = a->getTransform().getPosition();
-            Vector posB = b->getTransform().getPosition();
+            Vector posA = a->getPosition();
+            Vector posB = b->getPosition();
 
             Vector direction = {posB[0] - posA[0], posB[1] - posA[1], posB[2] - posA[2]};
             double r = magnitude(direction);

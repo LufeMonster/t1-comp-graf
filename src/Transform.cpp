@@ -4,114 +4,102 @@
 using namespace std;
 using namespace DataStructures;
 
-// --- Class constructor ---
-Transform::Transform(const Vector& position, const Vector& rotation, const Vector& scale) {
-    this->position = position;
-    this->rotation = rotation;
-    this->scale = scale;
-}
+namespace Transform {
 
-// ================================================================
-// Setters and getters:
-// ================================================================
-void Transform::setPosition(const Vector& position) {
-    this->position = position;
-}
-
-void Transform::setRotation(const Vector& rotation) {
-    this->rotation = rotation;
-}
-
-void Transform::setScale(const Vector& scale) {
-    this->scale = scale;
-}
-
-Vector Transform::getPosition() const {
-    return position;
-}
-
-Vector Transform::getRotation() const {
-    return rotation;
-}
-
-Vector Transform::getScale() const {
-    return scale;
-}
-
-// ================================================================
-// Transform operations:
-// ================================================================
-void Transform::translate(const Vector& delta) {
-    position = addVectors(position, delta);
-}
-
-void Transform::rotate(const Vector& delta) {
-    rotation = addVectors(rotation, delta);
-}
-
-void Transform::scaleBy(const Vector& factor) {
-    for (int i = 0; i < DIMENSION; ++i) {
-        scale[i] *= factor[i];
+    // ================================================================
+    // In-place point transformations:
+    // ================================================================
+    void translate(Vector& point, const Vector& translation) {
+        point = addVectors(point, translation);
     }
-}
 
-// ================================================================
-// Matrix composition:
-// ================================================================
-HomogeneousMatrix Transform::getModelMatrix() const {
-    HomogeneousMatrix scaleMatrix = {{
-        {scale[0], 0.0, 0.0, 0.0},
-        {0.0, scale[1], 0.0, 0.0},
-        {0.0, 0.0, scale[2], 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-    }};
-
-    double pitch = rotation[0], yaw = rotation[1], roll = rotation[2];
-
-    HomogeneousMatrix rotationPitch = {{
-        {1.0, 0.0, 0.0, 0.0},
-        {0.0, cos(pitch), -sin(pitch), 0.0},
-        {0.0, sin(pitch), cos(pitch), 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-    }};
-    HomogeneousMatrix rotationYaw = {{
-        {cos(yaw), 0.0, sin(yaw), 0.0},
-        {0.0, 1.0, 0.0, 0.0},
-        {-sin(yaw), 0.0, cos(yaw), 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-    }};
-    HomogeneousMatrix rotationRoll = {{
-        {cos(roll), -sin(roll), 0.0, 0.0},
-        {sin(roll), cos(roll), 0.0, 0.0},
-        {0.0, 0.0, 1.0, 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-    }};
-
-    HomogeneousMatrix translationMatrix = {{
-        {1.0, 0.0, 0.0, position[0]},
-        {0.0, 1.0, 0.0, position[1]},
-        {0.0, 0.0, 1.0, position[2]},
-        {0.0, 0.0, 0.0, 1.0}
-    }};
-
-    // Composition order: Translation * Roll * Pitch * Yaw * Scale
-    HomogeneousMatrix rotationMatrix = multiplyHMatrices(rotationRoll, multiplyHMatrices(rotationPitch, rotationYaw));
-    return multiplyHMatrices(translationMatrix, multiplyHMatrices(rotationMatrix, scaleMatrix));
-}
-
-// ================================================================
-// OpenGL application:
-// ================================================================
-void Transform::applyGL() const {
-    HomogeneousMatrix model = getModelMatrix();
-
-    // OpenGL expects a column-major 16-value array
-    double glMatrix[16];
-    for (int col = 0; col < 4; ++col) {
-        for (int row = 0; row < 4; ++row) {
-            glMatrix[col * 4 + row] = model[row][col];
+    void translate(vector<Vector>& points, const Vector& translation) {
+        for (Vector& point : points) {
+            translate(point, translation);
         }
     }
 
-    glMultMatrixd(glMatrix);
+    void rotate(Vector& point, const Vector& rotationCenter, double pitch, double yaw, double roll) {
+        applyMatrix(point, getRotationMatrix(rotationCenter, pitch, yaw, roll));
+    }
+
+    void rotate(vector<Vector>& points, const Vector& rotationCenter, double pitch, double yaw, double roll) {
+        applyMatrix(points, getRotationMatrix(rotationCenter, pitch, yaw, roll));
+    }
+
+    void scale(Vector& point, const Vector& scaleCenter, double scaleFactor) {
+        applyMatrix(point, getScaleMatrix(scaleCenter, scaleFactor));
+    }
+
+    void scale(vector<Vector>& points, const Vector& scaleCenter, double scaleFactor) {
+        applyMatrix(points, getScaleMatrix(scaleCenter, scaleFactor));
+    }
+
+    // ================================================================
+    // Matrix builders:
+    // ================================================================
+    HomogeneousMatrix getTranslationMatrix(const Vector& translation) {
+        return {{
+            {1.0, 0.0, 0.0, translation[0]},
+            {0.0, 1.0, 0.0, translation[1]},
+            {0.0, 0.0, 1.0, translation[2]},
+            {0.0, 0.0, 0.0, 1.0}
+        }};
+    }
+
+    HomogeneousMatrix getRotationMatrix(const Vector& rotationCenter, double pitch, double yaw, double roll) {
+        HomogeneousMatrix rotationPitch = {{
+            {1.0, 0.0, 0.0, 0.0},
+            {0.0, cos(pitch), -sin(pitch), 0.0},
+            {0.0, sin(pitch), cos(pitch), 0.0},
+            {0.0, 0.0, 0.0, 1.0}
+        }};
+        HomogeneousMatrix rotationYaw = {{
+            {cos(yaw), 0.0, sin(yaw), 0.0},
+            {0.0, 1.0, 0.0, 0.0},
+            {-sin(yaw), 0.0, cos(yaw), 0.0},
+            {0.0, 0.0, 0.0, 1.0}
+        }};
+        HomogeneousMatrix rotationRoll = {{
+            {cos(roll), -sin(roll), 0.0, 0.0},
+            {sin(roll), cos(roll), 0.0, 0.0},
+            {0.0, 0.0, 1.0, 0.0},
+            {0.0, 0.0, 0.0, 1.0}
+        }};
+        HomogeneousMatrix rotation = multiplyHMatrices(rotationRoll, multiplyHMatrices(rotationPitch, rotationYaw));
+
+        // Rotating around a center: move the center to the origin, rotate, move it back
+        HomogeneousMatrix toOrigin = getTranslationMatrix({-rotationCenter[0], -rotationCenter[1], -rotationCenter[2]});
+        HomogeneousMatrix backToCenter = getTranslationMatrix(rotationCenter);
+
+        return multiplyHMatrices(backToCenter, multiplyHMatrices(rotation, toOrigin));
+    }
+
+    HomogeneousMatrix getScaleMatrix(const Vector& scaleCenter, double scaleFactor) {
+        HomogeneousMatrix scaleMatrix = {{
+            {scaleFactor, 0.0, 0.0, 0.0},
+            {0.0, scaleFactor, 0.0, 0.0},
+            {0.0, 0.0, scaleFactor, 0.0},
+            {0.0, 0.0, 0.0, 1.0}
+        }};
+
+        // Scaling around a center: move the center to the origin, scale, move it back
+        HomogeneousMatrix toOrigin = getTranslationMatrix({-scaleCenter[0], -scaleCenter[1], -scaleCenter[2]});
+        HomogeneousMatrix backToCenter = getTranslationMatrix(scaleCenter);
+
+        return multiplyHMatrices(backToCenter, multiplyHMatrices(scaleMatrix, toOrigin));
+    }
+
+    // ================================================================
+    // Matrix application:
+    // ================================================================
+    void applyMatrix(Vector& point, const HomogeneousMatrix& matrix) {
+        point = multiplyHMatrixVector(matrix, point);
+    }
+
+    void applyMatrix(vector<Vector>& points, const HomogeneousMatrix& matrix) {
+        for (Vector& point : points) {
+            applyMatrix(point, matrix);
+        }
+    }
 }

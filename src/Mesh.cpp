@@ -1,5 +1,6 @@
 // Mesh.cpp
 #include "../include/Mesh.hh"
+#include "../include/Transform.hh"
 #include <cmath>
 using namespace std;
 using namespace DataStructures;
@@ -30,6 +31,23 @@ const vector<Mesh::Face>& Mesh::getFaces() const {
 
 ColorVector Mesh::getColor() const {
     return color;
+}
+
+// ================================================================
+// Visual transformations:
+// ================================================================
+void Mesh::translate(const Vector& translation) {
+    Transform::translate(vertices, translation);
+}
+
+void Mesh::rotate(const Vector& rotationCenter, double pitch, double yaw, double roll) {
+    Transform::rotate(vertices, rotationCenter, pitch, yaw, roll);
+    computeFaceNormals();
+}
+
+void Mesh::scale(const Vector& scaleCenter, double scaleFactor) {
+    Transform::scale(vertices, scaleCenter, scaleFactor);
+    computeFaceNormals();
 }
 
 // ================================================================
@@ -113,7 +131,7 @@ Mesh Mesh::generateSphere(double radius, int stacks, int slices, const ColorVect
         }
     }
 
-    // Connects the vertices into quad faces (degenerate triangles collapse naturally at the poles)
+    // Connects the vertices into quad faces
     int verticesPerStack = slices + 1;
     for (int i = 0; i < stacks; ++i) {
         for (int j = 0; j < slices; ++j) {
