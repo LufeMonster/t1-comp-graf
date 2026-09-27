@@ -5,6 +5,7 @@
 #include "../include/Mesh.hh"
 #include "../include/CelestialBody.hh"
 #include "../include/PhysicsWorld.hh"
+#include "../include/LightSource.hh"
 #include <GL/glut.h>
 #include <cmath>
 #include <iostream>
@@ -14,22 +15,18 @@ using namespace DataStructures;
 const Vector initialCameraPosition = {50, 50, 300};
 Camera* camera(new Camera(initialCameraPosition, 0.0, 3.14159, 0.0, {0, 1, 0}, 45.0, 1.333)); // 1.5708 3.14159
 
-array<int, 2> windowWidthHeight = {1024, 576};
-
 // ================================================================
 // Scene setup:
 // ================================================================
 // NOTE: these mass/distance/G values are scaled for a visually pleasant simulation,
 // not real astronomical units (real values would be either invisibly tiny or huge on screen).
 PhysicsWorld* physicsWorld(new PhysicsWorld(/* gravitationalConstant = */ 500.0));
- 
 CelestialBody* sun(new CelestialBody(
     "Sun", /* mass = */ 20000.0, /* radius = */ 30.0,
     /* position = */ {0.0, 0.0, 0.0},
     /* velocity = */ {0.0, 0.0, 0.0},
     Mesh::generateSphere(30.0, 24, 24, YELLOW)
 ));
- 
 CelestialBody* earth(new CelestialBody(
     "Earth", /* mass = */ 100.0, /* radius = */ 8.0,
     /* position = */ {200.0, 0.0, 0.0},
@@ -37,8 +34,6 @@ CelestialBody* earth(new CelestialBody(
     /* velocity = */ {0.0, 0.0, sqrt(500.0 * 20000.0 / 200.0)},
     Mesh::generateSphere(8.0, 16, 16, BLUE)
 ));
-
-
 // CelestialBody* moon(new CelestialBody(
 //     "Moon", /* mass = */ 1.0, /* radius = */ 2.0,
 //     /* position = */ {220.0, 0.0, 0.0}, // 20 units from Earth
@@ -47,12 +42,17 @@ CelestialBody* earth(new CelestialBody(
 //     Mesh::generateSphere(2.0, 12, 12, RED)
 // ));
 
+// The Sun doubles as the scene's light source.
+LightSource* sunLight(new LightSource(sun->getPosition(), DEFAULT_AMBIENT_LIGHT, DEFAULT_DIFFUSE_LIGHT, DEFAULT_SPECULAR_LIGHT));
+
 Simulation simulation(camera, physicsWorld);
 
-void initOpenGL(void) {
-	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClearColor(LIGHT_GRAY[0], LIGHT_GRAY[1], LIGHT_GRAY[2], 1.0f);
+array<int, 2> windowWidthHeight = {1024, 576};
 
+void initOpenGL(void) {
+	glClearColor(0.0f, 0.0f, 0.02f, 1.0f);
+
+    //glShadeModel(GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);   // activate the zBuffer
 
 	camera->setFov(45.0);
@@ -61,6 +61,10 @@ void initOpenGL(void) {
     physicsWorld->addBody(sun);
     physicsWorld->addBody(earth);
     //physicsWorld->addBody(moon);
+
+    // --- Makes the Sun self-illuminated instead of lit ---
+    sun->getMesh().setMaterial(VOID_LIGHT, VOID_LIGHT, VOID_LIGHT, 0.0f);
+    sun->getMesh().setEmission(DEFAULT_SUN_EMISSION);
 }
 
 array<double, 2> nearFarPlane;
@@ -91,11 +95,14 @@ void draw(void) {
 			  cameraParams[0][1], cameraParams[1][1], cameraParams[2][1],  // target position
 			  cameraParams[0][2], cameraParams[1][2], cameraParams[2][2]); // camera up
     
+    // --- Light must be (re)applied every frame, after gluLookAt and before drawing ---
+    sunLight->setPosition(sun->getPosition());
+    sunLight->apply(GL_LIGHT0);
+
     // ================================================================
     // Shapes to draw:
     // ================================================================
-
-    physicsWorld->renderAll(); // draws every registered CelestialBody at its current Transform
+    physicsWorld->renderAll(); // draws every registered CelestialBody
 
     glutSwapBuffers();
 }
@@ -104,7 +111,7 @@ array<int, 2> windowStart = {(1920 - windowWidthHeight[0]) / 2, (1080 - windowWi
 int main(int argc, char** argv) {
 
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(windowWidthHeight[0], windowWidthHeight[1]);
     glutInitWindowPosition(windowStart[0], windowStart[1]);
     glutCreateWindow("main");

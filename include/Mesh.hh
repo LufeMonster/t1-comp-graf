@@ -20,9 +20,19 @@ class Mesh {
         // Setters and getters:
         // ================================================================
         void setColor(const DataStructures::ColorVector& color);
+        // How this mesh reacts to external light sources (AMBIENT/DIFFUSE/SPECULAR):
+        void setMaterial(const DataStructures::LightVector& ambient, const DataStructures::LightVector& diffuse, const DataStructures::LightVector& specular, float shininess);
+        void setEmission(const DataStructures::LightVector& emission);
+
         const std::vector<DataStructures::Vector>& getVertices() const;
         const std::vector<Face>& getFaces() const;
         DataStructures::ColorVector getColor() const;
+
+        DataStructures::LightVector getAmbient() const;
+        DataStructures::LightVector getDiffuse() const;
+        DataStructures::LightVector getSpecular() const;
+        DataStructures::LightVector getEmission() const;
+        float getShininess() const;
 
         // ================================================================
         // Visual transformations:
@@ -58,6 +68,12 @@ class Mesh {
         std::vector<Face> faces;
         std::vector<DataStructures::Vector> faceNormals;
         DataStructures::ColorVector color;
+
+        DataStructures::LightVector ambient;
+        DataStructures::LightVector diffuse;
+        DataStructures::LightVector specular;
+        DataStructures::LightVector emission; // Light the mesh emits on its own (GEMISSION), used for self-illuminated objects, such as a star
+        float shininess;
 };
 
 #endif

@@ -6,11 +6,18 @@ using namespace std;
 using namespace DataStructures;
 
 // --- Class constructors ---
-Mesh::Mesh() : color(WHITE) {
+Mesh::Mesh() : Mesh({}, {}, WHITE) {
 }
 
 Mesh::Mesh(const vector<Vector>& vertices, const vector<Face>& faces, const ColorVector& color)
-    : vertices(vertices), faces(faces), color(color) {
+    : vertices(vertices), faces(faces), color(color),
+      // Default material: reacts normally to light, so a freshly-created Mesh is never
+      // "transparent" to a light source unless explicitly made so (see setMaterial/setEmission).
+      ambient({color[0] * 0.2f, color[1] * 0.2f, color[2] * 0.2f}),
+      diffuse({color[0], color[1], color[2], 1.0f}),
+      specular({0.3f, 0.3f, 0.3f, 1.0f}),
+      emission({0.0f, 0.0f, 0.0f, 1.0f}),
+      shininess(32.0f) {
     computeFaceNormals();
 }
 
@@ -31,6 +38,41 @@ const vector<Mesh::Face>& Mesh::getFaces() const {
 
 ColorVector Mesh::getColor() const {
     return color;
+}
+
+// ================================================================
+// Lighting material:
+// ================================================================
+void Mesh::setMaterial(const LightVector& ambient, const LightVector& diffuse,
+                        const LightVector& specular, float shininess) {
+    this->ambient = ambient;
+    this->diffuse = diffuse;
+    this->specular = specular;
+    this->shininess = shininess;
+}
+
+void Mesh::setEmission(const LightVector& emission) {
+    this->emission = emission;
+}
+
+LightVector Mesh::getAmbient() const {
+    return ambient;
+}
+
+LightVector Mesh::getDiffuse() const {
+    return diffuse;
+}
+
+LightVector Mesh::getSpecular() const {
+    return specular;
+}
+
+LightVector Mesh::getEmission() const {
+    return emission;
+}
+
+float Mesh::getShininess() const {
+    return shininess;
 }
 
 // ================================================================
@@ -83,6 +125,11 @@ void Mesh::computeFaceNormals() {
 // ================================================================
 void Mesh::render() const {
     gl::color(color);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient.data());
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse.data());
+    glMaterialfv(GL_FRONT, GL_SPECULAR, specular.data());
+    glMaterialfv(GL_FRONT, GL_SHININESS, &shininess);
+    glMaterialfv(GL_FRONT, GL_EMISSION, emission.data());
 
     for (size_t f = 0; f < faces.size(); ++f) {
         const Face& face = faces[f];
@@ -101,8 +148,11 @@ void Mesh::render() const {
 }
 
 void Mesh::renderWireframe() const {
-    gl::color(color);
+    // Lighting is disabled for wireframes rendering and the re-enabled
+    glPushAttrib(GL_LIGHTING_BIT);
+    glDisable(GL_LIGHTING);
 
+    gl::color(color);
     for (const Face& face : faces) {
         glBegin(GL_LINE_LOOP);
         for (int index : face) {
@@ -110,6 +160,8 @@ void Mesh::renderWireframe() const {
         }
         glEnd();
     }
+
+    glPopAttrib();
 }
 
 // ================================================================
@@ -131,7 +183,6 @@ Mesh Mesh::generateSphere(double radius, int stacks, int slices, const ColorVect
         }
     }
 
-    // Connects the vertices into quad faces
     int verticesPerStack = slices + 1;
     for (int i = 0; i < stacks; ++i) {
         for (int j = 0; j < slices; ++j) {
