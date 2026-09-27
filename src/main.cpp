@@ -6,6 +6,7 @@
 #include "../include/CelestialBody.hh"
 #include "../include/PhysicsWorld.hh"
 #include "../include/LightSource.hh"
+#include "../include/BezierImplementation.hh"
 #include <GL/glut.h>
 #include <cmath>
 #include <iostream>
@@ -46,6 +47,13 @@ CelestialBody* earth(new CelestialBody(
 LightSource* sunLight(new LightSource(sun->getPosition(), DEFAULT_AMBIENT_LIGHT, DEFAULT_DIFFUSE_LIGHT, DEFAULT_SPECULAR_LIGHT));
 
 Simulation simulation(camera, physicsWorld);
+BezierImplementation::BezierPoints bezierPoints = {
+    sun->getPosition(),
+    {75.0, 0.0, -50.0},
+    {150.0, 0.0, -50.0},
+    earth->getPosition()
+};
+BezierImplementation* petrovaLine(new BezierImplementation(bezierPoints, 10));
 
 array<int, 2> windowWidthHeight = {1024, 576};
 
@@ -103,6 +111,7 @@ void draw(void) {
     // Shapes to draw:
     // ================================================================
     physicsWorld->renderAll(); // draws every registered CelestialBody
+    petrovaLine->render();
 
     glutSwapBuffers();
 }
