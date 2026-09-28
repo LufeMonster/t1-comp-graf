@@ -3,6 +3,7 @@
 #define PHYSICSWORLD_H
 
 #include "../include/CelestialBody.hh"
+#include "../include/PetrovaLine.hh"
 #include <vector>
 
 // Owns no bodies (holds raw pointers to externally-owned CelestialBody instances)
@@ -17,6 +18,7 @@ class PhysicsWorld {
         // Body management:
         // ================================================================
         void addBody(CelestialBody* body);
+        void setPetrovaLine(PetrovaLine* petrovaLine);
         const std::vector<CelestialBody*>& getBodies() const;
 
         // ================================================================
@@ -33,6 +35,7 @@ class PhysicsWorld {
     private:
         double G; // Gravitational constant
         std::vector<CelestialBody*> bodies;
+        PetrovaLine* petrovaLine;
 
         void computeGravitationalForces();
 };

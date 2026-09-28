@@ -23,7 +23,7 @@ namespace DataStructures {
     using LightVector = std::array<float, 4>;
 
     // ================================================================
-    // Function declarations:
+    // Methods:
     // ================================================================
     Vector normalize(const Vector& v);
     Vector multiplyVectorScalar(const Vector& v, double scalar);

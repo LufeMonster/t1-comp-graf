@@ -14,6 +14,10 @@ void PhysicsWorld::addBody(CelestialBody* body) {
     bodies.push_back(body);
 }
 
+void PhysicsWorld::setPetrovaLine(PetrovaLine* petrovaLine) {
+    this->petrovaLine = petrovaLine;
+}
+
 const vector<CelestialBody*>& PhysicsWorld::getBodies() const {
     return bodies;
 }
@@ -27,6 +31,8 @@ void PhysicsWorld::step(double deltaTime) {
     for (CelestialBody* body : bodies) {
         body->advance(deltaTime);
     }
+    if(petrovaLine != nullptr)
+        petrovaLine->advance();
 }
 
 void PhysicsWorld::computeGravitationalForces() {
@@ -67,4 +73,6 @@ void PhysicsWorld::renderAll() const {
     for (const CelestialBody* body : bodies) {
         body->render();
     }
+    if(petrovaLine != nullptr)
+        petrovaLine->render();
 }

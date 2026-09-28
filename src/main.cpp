@@ -63,6 +63,7 @@ void initOpenGL(void) {
     physicsWorld->addBody(sun);
     physicsWorld->addBody(earth);
     //physicsWorld->addBody(moon);
+    physicsWorld->setPetrovaLine(petrovaLine);
 
     // --- Makes the Sun self-illuminated instead of lit ---
     sun->getMesh().setMaterial(VOID_LIGHT, VOID_LIGHT, VOID_LIGHT, 0.0f);
@@ -105,8 +106,6 @@ void draw(void) {
     // Shapes to draw:
     // ================================================================
     physicsWorld->renderAll(); // draws every registered CelestialBody
-    petrovaLine->advance();
-    petrovaLine->render();
 
     glutSwapBuffers();
 }

@@ -9,10 +9,14 @@
 #include <random>
 class PetrovaLine {
     public:
-        // --- Type aliases ---
+        // ================================================================
+        // Constants and type aliases:
+        // ================================================================
         using BezierPoints = std::array<DataStructures::Vector, 4>;
+
         // --- Class constructor ---
         PetrovaLine(CelestialBody* sun, CelestialBody* CO2planet, int resolution, double astrophageSize, float distribution);
+
         // ================================================================
         // Simulation:
         // ================================================================
@@ -32,10 +36,14 @@ class PetrovaLine {
         int resolution;
         double astrophageSize;
         float distribution;
+        // --- Randomness handlers ---
+        std::mt19937 gen;
+        std::uniform_real_distribution<double> dis;
+        // ================================================================
+        // Private methods:
+        // ================================================================
         void createAstrophages();
         DataStructures::Vector calculatePoint(float t, bool isDist);
         BezierPoints calculateBezierPoints();
-        std::mt19937 gen;
-        std::uniform_real_distribution<double> dis;
 };
 #endif

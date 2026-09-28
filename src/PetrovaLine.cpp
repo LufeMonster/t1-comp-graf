@@ -5,6 +5,7 @@
 using namespace std;
 using namespace DataStructures;
 
+// --- Class constructor ---
 PetrovaLine::PetrovaLine(CelestialBody* sun, CelestialBody* CO2planet, int resolution, double astrophageSize, float distribution) : 
     sun(sun), CO2planet(CO2planet), resolution(resolution), astrophageSize(astrophageSize), distribution(distribution), gen(random_device{}()), dis(0.0, 1.0) {
     oldCO2planetPosition = CO2planet->getPosition();
@@ -12,6 +13,29 @@ PetrovaLine::PetrovaLine(CelestialBody* sun, CelestialBody* CO2planet, int resol
     createAstrophages();
 }
 
+// ================================================================
+// Simulation:
+// ================================================================
+void PetrovaLine::advance() {
+    Vector sunPosition = sun->getPosition();
+    Vector currCO2planetPosition =  CO2planet->getPosition();
+    double angle = findAngle3Points(oldCO2planetPosition, sunPosition, currCO2planetPosition);
+    oldCO2planetPosition = currCO2planetPosition;
+    for(int i = 0; i < astrophages.size(); i++)
+        astrophages[i].rotate(sunPosition, 0.0, -angle, 0.0);
+}
+
+// ================================================================
+// Rendering:
+// ================================================================
+void PetrovaLine::render() const {
+    for(int i = 0; i < astrophages.size(); i++)
+        astrophages[i].render();
+}
+
+// ================================================================
+// Private methods:
+// ================================================================
 void PetrovaLine::createAstrophages() {
     astrophages.clear();
     float increment = 1.0 / (float)resolution;
@@ -32,19 +56,6 @@ void PetrovaLine::createAstrophages() {
             astrophages.back().setEmission(emission);
         }
     }
-}
-void PetrovaLine::advance() {
-    Vector sunPosition = sun->getPosition();
-    Vector currCO2planetPosition =  CO2planet->getPosition();
-    double angle = findAngle3Points(oldCO2planetPosition, sunPosition, currCO2planetPosition);
-    oldCO2planetPosition = currCO2planetPosition;
-    for(int i = 0; i < astrophages.size(); i++)
-        astrophages[i].rotate(sunPosition, 0.0, -angle, 0.0);
-}
-
-void PetrovaLine::render() const {
-    for(int i = 0; i < astrophages.size(); i++)
-        astrophages[i].render();
 }
 
 Vector PetrovaLine::calculatePoint(float t, bool isDist) {

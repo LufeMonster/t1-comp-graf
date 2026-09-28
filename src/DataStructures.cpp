@@ -8,7 +8,7 @@ using namespace std;
 namespace DataStructures {
 
     // ================================================================
-    // Function implementations:
+    // Methods:
     // ================================================================
     Vector normalize(const Vector& v) {
         double mag = magnitude(v);
