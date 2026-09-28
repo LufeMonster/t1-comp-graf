@@ -28,11 +28,14 @@ namespace DataStructures {
     Vector normalize(const Vector& v);
     Vector multiplyVectorScalar(const Vector& v, double scalar);
     Vector addVectors(const Vector& u, const Vector& v);
+    Vector subVectors(const Vector& u, const Vector& v);
     Vector multiplyHMatrixVector(const HomogeneousMatrix& A, const Vector& v);
     HomogeneousMatrix multiplyHMatrices(const HomogeneousMatrix& A, const HomogeneousMatrix& B);
     
     double magnitude(const Vector& v);
     double distance(const Vector& u, const Vector& v);
+    double dotProduct(const Vector& u, const Vector& v);
+    double findAngle3Points(const Vector& A, const Vector& vertex, const Vector& B);
     void printVector(const Vector& v);
     void printMatrix(const Matrix& A);
     void printHMatrix(const HomogeneousMatrix& A);
