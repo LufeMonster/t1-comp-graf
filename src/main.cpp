@@ -51,7 +51,7 @@ Simulation simulation(camera, physicsWorld);
 
 void initOpenGL(void) {
 	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClearColor(LIGHT_GRAY[0], LIGHT_GRAY[1], LIGHT_GRAY[2], 1.0f);
+    glClearColor(BLACK[0], BLACK[1], BLACK[2], 1.0f);
 
     glEnable(GL_DEPTH_TEST);   // activate the zBuffer
 
@@ -77,9 +77,79 @@ void reshape(int width, int height) {
 
 }
 
+void drawStars() {
+    glPointSize(2.0f);
+    glColor3f(1.0f, 1.0f, 1.0f);
+
+    glBegin(GL_POINTS);
+
+    glVertex3f(-150.0f, 100.0f, -100.0f);
+    glVertex3f(-100.0f, 70.0f, -150.0f);
+    glVertex3f(-50.0f, 120.0f, -200.0f);
+    glVertex3f(20.0f, 90.0f, -180.0f);
+    glVertex3f(70.0f, 130.0f, -150.0f);
+    glVertex3f(120.0f, 80.0f, -200.0f);
+    glVertex3f(160.0f, 110.0f, -120.0f);
+
+    glVertex3f(-170.0f, -80.0f, -150.0f);
+    glVertex3f(-120.0f, -120.0f, -180.0f);
+    glVertex3f(-60.0f, -90.0f, -200.0f);
+    glVertex3f(40.0f, -110.0f, -170.0f);
+    glVertex3f(100.0f, -70.0f, -200.0f);
+    glVertex3f(170.0f, -100.0f, -140.0f);
+
+    // More stars
+    glVertex3f(-190.0f, 140.0f, -220.0f);
+    glVertex3f(-160.0f, 40.0f, -190.0f);
+    glVertex3f(-130.0f, 150.0f, -250.0f);
+    glVertex3f(-90.0f, 20.0f, -220.0f);
+    glVertex3f(-70.0f, 160.0f, -170.0f);
+    glVertex3f(-30.0f, 50.0f, -240.0f);
+    glVertex3f(10.0f, 150.0f, -230.0f);
+    glVertex3f(45.0f, 40.0f, -190.0f);
+    glVertex3f(90.0f, 160.0f, -240.0f);
+    glVertex3f(140.0f, 30.0f, -210.0f);
+    glVertex3f(190.0f, 150.0f, -230.0f);
+
+    glVertex3f(-200.0f, -30.0f, -210.0f);
+    glVertex3f(-155.0f, -50.0f, -240.0f);
+    glVertex3f(-110.0f, -160.0f, -220.0f);
+    glVertex3f(-80.0f, -40.0f, -180.0f);
+    glVertex3f(-30.0f, -150.0f, -230.0f);
+    glVertex3f(10.0f, -50.0f, -210.0f);
+    glVertex3f(60.0f, -160.0f, -240.0f);
+    glVertex3f(90.0f, -30.0f, -190.0f);
+    glVertex3f(130.0f, -150.0f, -220.0f);
+    glVertex3f(190.0f, -40.0f, -250.0f);
+
+    glVertex3f(-180.0f, 10.0f, -260.0f);
+    glVertex3f(-140.0f, 110.0f, -280.0f);
+    glVertex3f(-75.0f, 85.0f, -270.0f);
+    glVertex3f(-20.0f, 10.0f, -290.0f);
+    glVertex3f(35.0f, 115.0f, -270.0f);
+    glVertex3f(80.0f, 60.0f, -290.0f);
+    glVertex3f(135.0f, 100.0f, -260.0f);
+    glVertex3f(180.0f, 20.0f, -280.0f);
+
+    glEnd();
+}
+
 void draw(void) {
 	// --- Clear screen ---
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+     // --- Update perspective ---
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    nearFarPlane = camera->getNearFarPlanes();
+
+    gluPerspective(
+        camera->getFov(),
+        camera->getAspectRatio(),
+        nearFarPlane[0],
+        nearFarPlane[1]
+    );
 
 	// --- Compute camera matrix ---
 	glMatrixMode(GL_MODELVIEW);
@@ -94,6 +164,8 @@ void draw(void) {
     // ================================================================
     // Shapes to draw:
     // ================================================================
+    
+    drawStars();
 
     physicsWorld->renderAll(); // draws every registered CelestialBody at its current Transform
 
@@ -101,10 +173,11 @@ void draw(void) {
 }
 
 array<int, 2> windowStart = {(1920 - windowWidthHeight[0]) / 2, (1080 - windowWidthHeight[1]) / 2}; // centralizes window for FullHD resolutions
+
 int main(int argc, char** argv) {
 
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(windowWidthHeight[0], windowWidthHeight[1]);
     glutInitWindowPosition(windowStart[0], windowStart[1]);
     glutCreateWindow("main");

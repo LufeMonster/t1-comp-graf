@@ -51,6 +51,11 @@ void Simulation::updateSimulation() {
     if (physicsWorld != nullptr) {
         physicsWorld->step(deltaTime/4.0);
     }
+    for (CelestialBody* body : physicsWorld->getBodies()) {
+    if (body->getName() == "Earth") {
+        body->spin(0.0, 0.5 * deltaTime, 0.0);
+    }
+}
 
     glutPostRedisplay();
 }
@@ -74,6 +79,35 @@ void Simulation::keyboardControl(unsigned char key, int x, int y) {
         camera->setAspectRatio(get<6>(initialParameters));
         camera->setNearFarPlanes(get<7>(initialParameters), get<8>(initialParameters));
     }
+    if (key == '+') {
+    for (CelestialBody* body : physicsWorld->getBodies()) {
+        if (body->getName() == "Earth") {
+            body->scale(1.1);
+        }
+    }
+    }
+    if (key == '-') {
+    for (CelestialBody* body : physicsWorld->getBodies()) {
+        if (body->getName() == "Earth") {
+            body->scale(0.9);
+        }
+    }
+    }
+    if (key == 'p') {
+    double newFov = camera->getFov() + 5.0;
+
+    if (newFov <= 120.0) {
+        camera->setFov(newFov);
+    }
+}
+
+if (key == 'o') {
+    double newFov = camera->getFov() - 5.0;
+
+    if (newFov >= 20.0) {
+        camera->setFov(newFov);
+    }
+}
 }
 
 void Simulation::keyboardControlUp(unsigned char key, int x, int y) {

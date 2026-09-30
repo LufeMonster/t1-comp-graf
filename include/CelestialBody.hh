@@ -36,7 +36,8 @@ class CelestialBody {
 
         // Applies an axial spin to the mesh, rotated around the body's current position.
         void spin(double pitch, double yaw, double roll);
-
+        // Scales the body's mesh around its current position.
+        void scale(double scaleFactor);
         // ================================================================
         // Rendering:
         // ================================================================
@@ -47,6 +48,7 @@ class CelestialBody {
         double radius;
         RigidBody rigidBody;
         Mesh mesh;
+        Mesh marker;
 };
 
 #endif
