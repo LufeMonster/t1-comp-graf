@@ -143,8 +143,8 @@ PetrovaLine::BezierPoints PetrovaLine::calculateBezierPoints() {
     double dist = distance(sunPosition, CO2planetPosition);
     BezierPoints bezierPoints = {
         sunPosition,
-        addVectors(sunPosition, {(dist * 0.333), 0.0, -50.0}),
-        addVectors(sunPosition, {(dist * 0.667), 0.0, -50.0}),
+        addVectors(sunPosition, {(dist * 0.333), 0.0, (dist * -0.25)}),
+        addVectors(sunPosition, {(dist * 0.667), 0.0, (dist * -0.25)}),
         CO2planetPosition
     };
     return bezierPoints;

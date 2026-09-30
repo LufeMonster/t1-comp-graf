@@ -14,42 +14,49 @@
 using namespace std;
 using namespace DataStructures;
 
-const Vector initialCameraPosition = {50, 50, 300};
-Camera* camera(new Camera(initialCameraPosition, 0.0, 3.14159, 0.0, {0, 1, 0}, 45.0, 1.333)); // 1.5708 3.14159
+const Vector initialCameraPosition = {0.0, 128.0, 256.0};
+Camera* camera(new Camera(initialCameraPosition, -0.524, 2.618, 0.0, {0, 1, 0}, 45.0, 1.333)); // -30, 150
 
 // ================================================================
 // Scene setup:
 // ================================================================
 // NOTE: these mass/distance/G values are scaled for a visually pleasant simulation,
 // not real astronomical units (real values would be either invisibly tiny or huge on screen).
-PhysicsWorld* physicsWorld(new PhysicsWorld(/* gravitationalConstant = */ 500.0));
+PhysicsWorld* physicsWorld(new PhysicsWorld(/* gravitationalConstant = */ 256.0));
 CelestialBody* sun(new CelestialBody(
-    "Sun", /* mass = */ 20000.0, /* radius = */ 30.0,
+    "Sun", /* mass = */ 65536.0, /* radius = */ 32.0,
     /* position = */ {0.0, 0.0, 0.0},
     /* velocity = */ {0.0, 0.0, 0.0},
-    Mesh::generateSphere(30.0, 24, 24, YELLOW, /* emissive = */ true)
+    Mesh::generateSphere(32.0, 24, 24, YELLOW, /* emissive = */ true)
+));
+CelestialBody* venus(new CelestialBody(
+    "Venus", /* mass = */ 0.16, /* radius = */ 8.0,
+    /* position = */ {192.0, 0.0, 0.0},
+    // Circular-orbit approximation: v = sqrt(G * M_sun / r), tangential to the Sun
+    /* velocity = */ {0.0, 0.0, sqrt(256.0 * 65536.0 / 192.0)},
+    Mesh::generateSphere(8.0, 16, 16, ORANGE)
 ));
 CelestialBody* earth(new CelestialBody(
-    "Earth", /* mass = */ 100.0, /* radius = */ 8.0,
-    /* position = */ {200.0, 0.0, 0.0},
+    "Earth", /* mass = */ 0.197, /* radius = */ 10.0,
+    /* position = */ {256.0, 0.0, 0.0},
     // Circular-orbit approximation: v = sqrt(G * M_sun / r), tangential to the Sun
-    /* velocity = */ {0.0, 0.0, sqrt(500.0 * 20000.0 / 200.0)},
-    Mesh::generateSphere(8.0, 16, 16, BLUE)
+    /* velocity = */ {0.0, 0.0, sqrt(256.0 * 65536.0 / 256.0)},
+    Mesh::generateSphere(10.0, 16, 16, BLUE)
 ));
 // CelestialBody* moon(new CelestialBody(
-//     "Moon", /* mass = */ 1.0, /* radius = */ 2.0,
-//     /* position = */ {220.0, 0.0, 0.0}, // 20 units from Earth
+//     "Moon", /* mass = */ 2.423e-3, /* radius = */ 2.5,
+//     /* position = */ {272.0, 0.0, 0.0}, // 20 units from Earth
 //     // Earth's velocity plus the Moon's own orbital velocity around Earth
-//     /* velocity = */ {0.0, 0.0, sqrt(500.0 * 20000.0 / 200.0) + sqrt(500.0 * 100.0 / 20.0)},
-//     Mesh::generateSphere(2.0, 12, 12, RED)
+//     /* velocity = */ {0.0, 0.0, sqrt(256.0 * 65536.0 / 256.0) + sqrt(256.0 * 0.197.0 / 16.0)},
+//     Mesh::generateSphere(2.5, 12, 12, LIGHT_GRAY)
 // ));
 
 // The Sun doubles as the scene's light source.
 LightSource* sunLight(new LightSource(sun->getPosition(), DEFAULT_AMBIENT_LIGHT, DEFAULT_DIFFUSE_LIGHT, DEFAULT_SPECULAR_LIGHT));
 
 Simulation simulation(camera, physicsWorld);
-PetrovaLine* petrovaLine(new PetrovaLine(sun, earth, 128, 1.0, 5.0f));
-SkySphere* skySphere(new SkySphere({0.0, 0.0, 0.0}, /* starCount = */ 400, /* starSize = */ 1.0, /* radius = */ 2048.0));
+PetrovaLine* petrovaLine(new PetrovaLine(sun, venus, 128, 0.5, 5.0f));
+SkySphere* skySphere(new SkySphere({0.0, 0.0, 0.0}, /* starCount = */ 256, /* starSize = */ 2.0, /* radius = */ 2048.0));
 
 array<int, 2> windowWidthHeight = {1024, 576};
 
@@ -58,13 +65,14 @@ void initOpenGL(void) {
 
     glEnable(GL_DEPTH_TEST);   // activate the zBuffer
     glShadeModel(GL_SMOOTH);
-    glEnable(GL_BLEND);                                // needed for Mesh's alpha (e.g. PetrovaLine's central tube)
+    glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	camera->setFov(45.0);
 
     // --- Registers the bodies with the physics world ---
     physicsWorld->addBody(sun);
+    physicsWorld->addBody(venus);
     physicsWorld->addBody(earth);
     //physicsWorld->addBody(moon);
     physicsWorld->setPetrovaLine(petrovaLine);

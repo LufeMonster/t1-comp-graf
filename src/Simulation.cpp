@@ -56,6 +56,9 @@ void Simulation::updateSimulation() {
         physicsWorld->step(deltaTime/4.0 * simulationSpeed);
     }
 
+    //cout << "pos: " << camera->getPosition()[0] << ", " << camera->getPosition()[1] << ", " << camera->getPosition()[2] << "." << endl;
+    //cout << "dir: " << camera->getDirection()[0] << ", " << camera->getDirection()[1] << ", " << camera->getDirection()[2] << "." << endl;
+
     glutPostRedisplay();
 }
 

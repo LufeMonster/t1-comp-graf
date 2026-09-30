@@ -18,7 +18,7 @@ Camera::Camera(const Vector& position, double pitch, double yaw, double roll, co
     this->fov = fov;
     this->aspectRatio = aspectRatio;
     this->nearPlane = 0.1;
-    this->farPlane = 10000.0;
+    this->farPlane = 4096.0;
 
     this->initialParameters = {position, up, pitch, yaw, roll, fov, aspectRatio, 0.1, 100.0};
 }
