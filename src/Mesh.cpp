@@ -6,19 +6,14 @@ using namespace std;
 using namespace DataStructures;
 
 // --- Class constructors ---
-Mesh::Mesh() : Mesh({}, {}, WHITE) {
+Mesh::Mesh() : Mesh({}, {}, WHITE, false) {
 }
 
-Mesh::Mesh(const vector<Vector>& vertices, const vector<Face>& faces, const ColorVector& color)
-    : vertices(vertices), faces(faces), color(color),
-      // Default material: reacts normally to light, so a freshly-created Mesh is never
-      // "transparent" to a light source unless explicitly made so (see setMaterial/setEmission).
-      ambient({color[0] * 0.2f, color[1] * 0.2f, color[2] * 0.2f}),
-      diffuse({color[0], color[1], color[2], 1.0f}),
-      specular({0.3f, 0.3f, 0.3f, 1.0f}),
-      emission({0.0f, 0.0f, 0.0f, 1.0f}),
-      shininess(32.0f) {
-    computeFaceNormals();
+Mesh::Mesh(const vector<Vector>& vertices, const vector<Face>& faces, const ColorVector& color, bool emissive)
+    : vertices(vertices), faces(faces), color(color) {
+    this->extendedColor = {color[0], color[1], color[2], 1.0f};
+    setEmissive(emissive); // Sets the default reacts-to-light material, or the self-illuminated one
+    computeVertexNormals();
 }
 
 // ================================================================
@@ -26,6 +21,10 @@ Mesh::Mesh(const vector<Vector>& vertices, const vector<Face>& faces, const Colo
 // ================================================================
 void Mesh::setColor(const ColorVector& color) {
     this->color = color;
+    this->extendedColor = {color[0], color[1], color[2], 1.0f};
+    if (emissive) {
+        emission = {color[0], color[1], color[2], 1.0f}; // Keeps the glow in sync with the mesh's own color
+    }
 }
 
 const vector<Vector>& Mesh::getVertices() const {
@@ -43,16 +42,27 @@ ColorVector Mesh::getColor() const {
 // ================================================================
 // Lighting material:
 // ================================================================
-void Mesh::setMaterial(const LightVector& ambient, const LightVector& diffuse,
-                        const LightVector& specular, float shininess) {
-    this->ambient = ambient;
-    this->diffuse = diffuse;
-    this->specular = specular;
+void Mesh::setMaterial(float ambientIntensity, float diffuseIntensity, float specularIntensity, float shininess) {
+    this->ambient = {ambientIntensity, ambientIntensity, ambientIntensity, 1.0f};
+    this->diffuse = {diffuseIntensity, diffuseIntensity, diffuseIntensity, 1.0f};
+    this->specular = {specularIntensity, specularIntensity, specularIntensity, 1.0f};
     this->shininess = shininess;
 }
 
 void Mesh::setEmission(const LightVector& emission) {
     this->emission = emission;
+}
+
+void Mesh::setEmissive(bool emissive) {
+    this->emissive = emissive;
+
+    if (emissive) {
+        setMaterial(0.0f, 0.0f, 0.0f, 0.0f);
+        emission = {color[0], color[1], color[2], 1.0f};
+    } else {
+        setMaterial(0.2f, 1.0f, 0.3f, 32.0f);
+        emission = VOID_LIGHT;
+    }
 }
 
 LightVector Mesh::getAmbient() const {
@@ -75,6 +85,10 @@ float Mesh::getShininess() const {
     return shininess;
 }
 
+bool Mesh::isEmissive() const {
+    return emissive;
+}
+
 // ================================================================
 // Visual transformations:
 // ================================================================
@@ -84,12 +98,12 @@ void Mesh::translate(const Vector& translation) {
 
 void Mesh::rotate(const Vector& rotationCenter, double pitch, double yaw, double roll) {
     Transform::rotate(vertices, rotationCenter, pitch, yaw, roll);
-    computeFaceNormals();
+    computeVertexNormals();
 }
 
 void Mesh::scale(const Vector& scaleCenter, double scaleFactor) {
     Transform::scale(vertices, scaleCenter, scaleFactor);
-    computeFaceNormals();
+    computeVertexNormals();
 }
 
 // ================================================================
@@ -120,27 +134,45 @@ void Mesh::computeFaceNormals() {
     }
 }
 
+void Mesh::computeVertexNormals() {
+    computeFaceNormals();
+
+    vertexNormals.assign(vertices.size(), Vector{0.0, 0.0, 0.0});
+
+    // Accumulates each face's normal into every vertex it touches...
+    for (size_t f = 0; f < faces.size(); ++f) {
+        for (int index : faces[f]) {
+            vertexNormals[index] = addVectors(vertexNormals[index], faceNormals[f]);
+        }
+    }
+
+    // ...then averages
+    for (Vector& normal : vertexNormals) {
+        normal = normalize(normal);
+    }
+}
+
 // ================================================================
 // Rendering:
 // ================================================================
 void Mesh::render() const {
-    gl::color(color);
-    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient.data());
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse.data());
-    glMaterialfv(GL_FRONT, GL_SPECULAR, specular.data());
+    glMaterialfv(GL_FRONT, GL_AMBIENT, hadamardProduct(ambient, extendedColor).data());
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, hadamardProduct(diffuse, extendedColor).data());
+    glMaterialfv(GL_FRONT, GL_SPECULAR, hadamardProduct(specular, extendedColor).data());
     glMaterialfv(GL_FRONT, GL_SHININESS, &shininess);
     glMaterialfv(GL_FRONT, GL_EMISSION, emission.data());
+
+    gl::color(color);
 
     for (size_t f = 0; f < faces.size(); ++f) {
         const Face& face = faces[f];
         if (face.size() < 3) continue;
 
-        if (f < faceNormals.size()) {
-            gl::normal(faceNormals[f]);
-        }
-
         glBegin(GL_POLYGON);
         for (int index : face) {
+            if (index < (int)vertexNormals.size()) {
+                gl::normal(vertexNormals[index]);
+            }
             gl::vertex(vertices[index]);
         }
         glEnd();
@@ -167,7 +199,7 @@ void Mesh::renderWireframe() const {
 // ================================================================
 // Primitive factories:
 // ================================================================
-Mesh Mesh::generateSphere(double radius, int stacks, int slices, const ColorVector& color) {
+Mesh Mesh::generateSphere(double radius, int stacks, int slices, const ColorVector& color, bool emissive) {
     vector<Vector> vertices;
     vector<Face> faces;
 
@@ -198,10 +230,10 @@ Mesh Mesh::generateSphere(double radius, int stacks, int slices, const ColorVect
         }
     }
 
-    return Mesh(vertices, faces, color);
+    return Mesh(vertices, faces, color, emissive);
 }
 
-Mesh Mesh::generateOrbitRing(double radius, int segments, const ColorVector& color) {
+Mesh Mesh::generateOrbitRing(double radius, int segments, const ColorVector& color, bool emissive) {
     vector<Vector> vertices;
     Face ring;
 
@@ -212,5 +244,5 @@ Mesh Mesh::generateOrbitRing(double radius, int segments, const ColorVector& col
     }
 
     // Stored as a single face; meant to be drawn with renderWireframe(), not render()
-    return Mesh(vertices, {ring}, color);
+    return Mesh(vertices, {ring}, color, emissive);
 }

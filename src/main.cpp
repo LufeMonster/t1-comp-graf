@@ -7,6 +7,7 @@
 #include "../include/PhysicsWorld.hh"
 #include "../include/LightSource.hh"
 #include "../include/PetrovaLine.hh"
+#include "../include/SkySphere.hh"
 #include <GL/glut.h>
 #include <cmath>
 #include <iostream>
@@ -26,7 +27,7 @@ CelestialBody* sun(new CelestialBody(
     "Sun", /* mass = */ 20000.0, /* radius = */ 30.0,
     /* position = */ {0.0, 0.0, 0.0},
     /* velocity = */ {0.0, 0.0, 0.0},
-    Mesh::generateSphere(30.0, 24, 24, YELLOW)
+    Mesh::generateSphere(30.0, 24, 24, YELLOW, /* emissive = */ true)
 ));
 CelestialBody* earth(new CelestialBody(
     "Earth", /* mass = */ 100.0, /* radius = */ 8.0,
@@ -48,14 +49,15 @@ LightSource* sunLight(new LightSource(sun->getPosition(), DEFAULT_AMBIENT_LIGHT,
 
 Simulation simulation(camera, physicsWorld);
 PetrovaLine* petrovaLine(new PetrovaLine(sun, earth, 128, 1.0, 5.0f));
+SkySphere* skySphere(new SkySphere({0.0, 0.0, 0.0}, /* starCount = */ 400, /* starSize = */ 1.0));
 
 array<int, 2> windowWidthHeight = {1024, 576};
 
 void initOpenGL(void) {
 	glClearColor(0.0f, 0.0f, 0.02f, 1.0f);
 
-    //glShadeModel(GL_SMOOTH);
     glEnable(GL_DEPTH_TEST);   // activate the zBuffer
+    glShadeModel(GL_SMOOTH);
 
 	camera->setFov(45.0);
 
@@ -64,10 +66,7 @@ void initOpenGL(void) {
     physicsWorld->addBody(earth);
     //physicsWorld->addBody(moon);
     physicsWorld->setPetrovaLine(petrovaLine);
-
-    // --- Makes the Sun self-illuminated instead of lit ---
-    sun->getMesh().setMaterial(VOID_LIGHT, VOID_LIGHT, VOID_LIGHT, 0.0f);
-    sun->getMesh().setEmission(DEFAULT_SUN_EMISSION);
+    physicsWorld->setSkySphere(skySphere);
 }
 
 array<double, 2> nearFarPlane;

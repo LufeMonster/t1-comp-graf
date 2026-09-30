@@ -81,6 +81,16 @@ namespace DataStructures {
 
         return result;
     }
+
+    LightVector hadamardProduct(const LightVector& u, const LightVector& v) {
+        LightVector result;
+        
+        for (int i = 0; i < 4; ++i) {
+            result[i] = u[i] * v[i];
+        }
+        
+        return result;
+    }
     
     double magnitude(const Vector& v) {
         double sumOfSquares = 0.0;

@@ -4,7 +4,8 @@ using namespace std;
 using namespace DataStructures;
 
 // --- Class constructor ---
-PhysicsWorld::PhysicsWorld(double gravitationalConstant) : G(gravitationalConstant) {
+PhysicsWorld::PhysicsWorld(double gravitationalConstant)
+    : G(gravitationalConstant), petrovaLine(nullptr), skySphere(nullptr) {
 }
 
 // ================================================================
@@ -18,8 +19,28 @@ void PhysicsWorld::setPetrovaLine(PetrovaLine* petrovaLine) {
     this->petrovaLine = petrovaLine;
 }
 
+void PhysicsWorld::setSkySphere(SkySphere* skySphere) {
+    this->skySphere = skySphere;
+}
+
+void PhysicsWorld::setGravitationalConstant(double gravitationalConstant) {
+    G = gravitationalConstant;
+}
+
 const vector<CelestialBody*>& PhysicsWorld::getBodies() const {
     return bodies;
+}
+
+PetrovaLine* PhysicsWorld::getPetrovaLine() const {
+    return petrovaLine;
+}
+
+SkySphere* PhysicsWorld::getSkySphere() const {
+    return skySphere;
+}
+
+double PhysicsWorld::getGravitationalConstant() const {
+    return G;
 }
 
 // ================================================================
@@ -31,8 +52,10 @@ void PhysicsWorld::step(double deltaTime) {
     for (CelestialBody* body : bodies) {
         body->advance(deltaTime);
     }
-    if(petrovaLine != nullptr)
+
+    if (petrovaLine != nullptr) {
         petrovaLine->advance();
+    }
 }
 
 void PhysicsWorld::computeGravitationalForces() {
@@ -70,9 +93,15 @@ void PhysicsWorld::computeGravitationalForces() {
 // Rendering:
 // ================================================================
 void PhysicsWorld::renderAll() const {
+    if (skySphere != nullptr) {
+        skySphere->render(); // Drawn first, as a distant backdrop behind everything else
+    }
+
     for (const CelestialBody* body : bodies) {
         body->render();
     }
-    if(petrovaLine != nullptr)
+
+    if (petrovaLine != nullptr) {
         petrovaLine->render();
+    }
 }

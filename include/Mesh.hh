@@ -14,16 +14,17 @@ class Mesh {
         Mesh();
         Mesh(const std::vector<DataStructures::Vector>& vertices,
              const std::vector<Face>& faces,
-             const DataStructures::ColorVector& color = DataStructures::WHITE);
+             const DataStructures::ColorVector& color = DataStructures::WHITE,
+             bool emissive = false);
 
         // ================================================================
         // Setters and getters:
         // ================================================================
         void setColor(const DataStructures::ColorVector& color);
-        // How this mesh reacts to external light sources (AMBIENT/DIFFUSE/SPECULAR):
-        void setMaterial(const DataStructures::LightVector& ambient, const DataStructures::LightVector& diffuse, const DataStructures::LightVector& specular, float shininess);
+        void setMaterial(float ambientIntensity, float diffuseIntensity, float specularIntensity, float shininess);
         void setEmission(const DataStructures::LightVector& emission);
-
+        // Switches between the two material presets (true = purely self-illuminated)
+        void setEmissive(bool emissive);
         const std::vector<DataStructures::Vector>& getVertices() const;
         const std::vector<Face>& getFaces() const;
         DataStructures::ColorVector getColor() const;
@@ -33,6 +34,7 @@ class Mesh {
         DataStructures::LightVector getSpecular() const;
         DataStructures::LightVector getEmission() const;
         float getShininess() const;
+        bool isEmissive() const;
 
         // ================================================================
         // Visual transformations:
@@ -45,7 +47,8 @@ class Mesh {
         // ================================================================
         // Normal computation:
         // ================================================================
-        void computeFaceNormals();
+        void computeFaceNormals();   // One flat normal per face
+        void computeVertexNormals(); // One normal per vertex, averaged from its adjacent faces
 
         // ================================================================
         // Rendering:
@@ -57,23 +60,24 @@ class Mesh {
         // Primitive factories:
         // ================================================================
         // Generated centered at the origin - translate() the result to place it in the scene.
-        static Mesh generateSphere(double radius, int stacks, int slices,
-                                    const DataStructures::ColorVector& color = DataStructures::WHITE);
+        static Mesh generateSphere(double radius, int stacks, int slices, const DataStructures::ColorVector& color = DataStructures::WHITE, bool emissive = false);
         // Returns a single closed loop of points - call renderWireframe() to draw it as an orbit path
-        static Mesh generateOrbitRing(double radius, int segments,
-                                       const DataStructures::ColorVector& color = DataStructures::WHITE);
+        static Mesh generateOrbitRing(double radius, int segments, const DataStructures::ColorVector& color = DataStructures::WHITE, bool emissive = false);
 
     private:
         std::vector<DataStructures::Vector> vertices;
         std::vector<Face> faces;
         std::vector<DataStructures::Vector> faceNormals;
+        std::vector<DataStructures::Vector> vertexNormals;
         DataStructures::ColorVector color;
+        DataStructures::LightVector extendedColor;
 
         DataStructures::LightVector ambient;
         DataStructures::LightVector diffuse;
         DataStructures::LightVector specular;
         DataStructures::LightVector emission; // Light the mesh emits on its own (GEMISSION), used for self-illuminated objects, such as a star
         float shininess;
+        bool emissive;
 };
 
 #endif

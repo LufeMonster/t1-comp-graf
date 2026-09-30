@@ -59,7 +59,7 @@ void LightSource::scaleIntensity(double factor) {
 // ================================================================
 void LightSource::apply(GLenum lightUnit) const {
     // w determines if light is positional (w = 1.0) or directional (w = 0.0)
-    GLfloat glPosition[4] = {position[0], position[1], position[2], 1.0f};
+    GLfloat glPosition[4] = {static_cast<float>(position[0]), static_cast<float>(position[1]), static_cast<float>(position[2]), 1.0f};
 
     glLightfv(lightUnit, GL_POSITION, glPosition);
     glLightfv(lightUnit, GL_AMBIENT, ambientLight.data());

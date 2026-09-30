@@ -31,6 +31,7 @@ namespace DataStructures {
     Vector subVectors(const Vector& u, const Vector& v);
     Vector multiplyHMatrixVector(const HomogeneousMatrix& A, const Vector& v);
     HomogeneousMatrix multiplyHMatrices(const HomogeneousMatrix& A, const HomogeneousMatrix& B);
+    LightVector hadamardProduct(const LightVector& u, const LightVector& v);
     
     double magnitude(const Vector& v);
     double distance(const Vector& u, const Vector& v);
@@ -75,7 +76,6 @@ namespace DataStructures {
     const LightVector DEFAULT_DIFFUSE_LIGHT = {1.0f, 1.0f, 1.0f, 1.0f};
     const LightVector DEFAULT_SPECULAR_LIGHT = {1.0f, 1.0f, 1.0f, 1.0f};
     const LightVector VOID_LIGHT = {0.0f, 0.0f, 0.0f, 1.0f};
-    const LightVector DEFAULT_SUN_EMISSION = {0.996f, 0.847f, 0.239f, 1.0f};
 
     // ================================================================
     // Colors:
