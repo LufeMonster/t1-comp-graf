@@ -10,7 +10,7 @@ Simulation* Simulation::instance = nullptr;
 
 // --- Class constructor and destructor ---
 Simulation::Simulation(Camera* camera, PhysicsWorld* physicsWorld) : 
-    camera(camera), physicsWorld(physicsWorld), lastMouseX(0), lastMouseY(0), isMousePressed(false), isShiftPressed(false), previousTime(0), deltaTime(0.0) {
+    camera(camera), physicsWorld(physicsWorld), lastMouseX(0), lastMouseY(0), isMousePressed(false), isShiftPressed(false), previousTime(0), deltaTime(0.0), simulationSpeed(1.0) {
 
     instance = this;
     for(int i = 0; i < 256; i++) keyStates[i] = false;
@@ -22,6 +22,10 @@ Simulation::Simulation(Camera* camera, PhysicsWorld* physicsWorld) :
 Simulation::~Simulation() {
     if (instance == this)
         instance = nullptr;
+}
+
+double Simulation::getSimulationSpeed() const {
+    return simulationSpeed;
 }
 
 // ================================================================
@@ -49,13 +53,16 @@ void Simulation::updateSimulation() {
     // --- Physics simulation ---
     // Always pass 'deltaTime' to your physics functions! 
     if (physicsWorld != nullptr) {
-        physicsWorld->step(deltaTime/4.0);
+        physicsWorld->step(deltaTime/4.0 * simulationSpeed);
     }
     for (CelestialBody* body : physicsWorld->getBodies()) {
     if (body->getName() == "Earth") {
         body->spin(0.0, 0.5 * deltaTime, 0.0);
     }
 }
+
+    //cout << "pos: " << camera->getPosition()[0] << ", " << camera->getPosition()[1] << ", " << camera->getPosition()[2] << "." << endl;
+    //cout << "dir: " << camera->getDirection()[0] << ", " << camera->getDirection()[1] << ", " << camera->getDirection()[2] << "." << endl;
 
     glutPostRedisplay();
 }
@@ -108,6 +115,15 @@ if (key == 'o') {
         camera->setFov(newFov);
     }
 }
+
+    if (key == 'm') {
+        simulationSpeed += SIMULATION_SPEED_STEP;
+        if (simulationSpeed > MAX_SIMULATION_SPEED) simulationSpeed = MAX_SIMULATION_SPEED;
+    }
+    if (key == 'n') {
+        simulationSpeed -= SIMULATION_SPEED_STEP;
+        if (simulationSpeed < MIN_SIMULATION_SPEED) simulationSpeed = MIN_SIMULATION_SPEED;
+    }
 }
 
 void Simulation::keyboardControlUp(unsigned char key, int x, int y) {

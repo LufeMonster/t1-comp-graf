@@ -20,18 +20,23 @@ namespace DataStructures {
     using Matrix = std::array<std::array<double, DIMENSION>, DIMENSION>;
     using HomogeneousMatrix = std::array<std::array<double, (DIMENSION + 1)>, (DIMENSION + 1)>;
     using ColorVector = std::array<float, 3>;
+    using LightVector = std::array<float, 4>;
 
     // ================================================================
-    // Function declarations:
+    // Methods:
     // ================================================================
     Vector normalize(const Vector& v);
     Vector multiplyVectorScalar(const Vector& v, double scalar);
     Vector addVectors(const Vector& u, const Vector& v);
+    Vector subVectors(const Vector& u, const Vector& v);
     Vector multiplyHMatrixVector(const HomogeneousMatrix& A, const Vector& v);
     HomogeneousMatrix multiplyHMatrices(const HomogeneousMatrix& A, const HomogeneousMatrix& B);
+    LightVector hadamardProduct(const LightVector& u, const LightVector& v);
     
     double magnitude(const Vector& v);
     double distance(const Vector& u, const Vector& v);
+    double dotProduct(const Vector& u, const Vector& v);
+    double findAngle3Points(const Vector& A, const Vector& vertex, const Vector& B);
     void printVector(const Vector& v);
     void printMatrix(const Matrix& A);
     void printHMatrix(const HomogeneousMatrix& A);
@@ -62,7 +67,15 @@ namespace DataStructures {
         // color wrappers
         static void color(const ColorVector& c) { glColor3fv(c.data()); };
         static void color3f(const ColorVector& c) { glColor3f(c[0], c[1], c[2]); };
-    };    
+    };
+
+    // ================================================================
+    // Light:
+    // ================================================================
+    const LightVector DEFAULT_AMBIENT_LIGHT = {0.15f, 0.15f, 0.15f, 1.0f};
+    const LightVector DEFAULT_DIFFUSE_LIGHT = {1.0f, 1.0f, 1.0f, 1.0f};
+    const LightVector DEFAULT_SPECULAR_LIGHT = {1.0f, 1.0f, 1.0f, 1.0f};
+    const LightVector VOID_LIGHT = {0.0f, 0.0f, 0.0f, 1.0f};
 
     // ================================================================
     // Colors:

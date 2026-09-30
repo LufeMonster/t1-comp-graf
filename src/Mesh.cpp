@@ -6,12 +6,14 @@ using namespace std;
 using namespace DataStructures;
 
 // --- Class constructors ---
-Mesh::Mesh() : color(WHITE) {
+Mesh::Mesh() : Mesh({}, {}, WHITE, false, 1.0f) {
 }
 
-Mesh::Mesh(const vector<Vector>& vertices, const vector<Face>& faces, const ColorVector& color)
-    : vertices(vertices), faces(faces), color(color) {
-    computeFaceNormals();
+Mesh::Mesh(const vector<Vector>& vertices, const vector<Face>& faces, const ColorVector& color, bool emissive, float alpha)
+    : vertices(vertices), faces(faces), color(color), alpha(alpha) {
+    this->extendedColor = {color[0], color[1], color[2], 1.0f};
+    setEmissive(emissive); // Sets the default reacts-to-light material, or the self-illuminated one
+    computeVertexNormals();
 }
 
 // ================================================================
@@ -19,6 +21,10 @@ Mesh::Mesh(const vector<Vector>& vertices, const vector<Face>& faces, const Colo
 // ================================================================
 void Mesh::setColor(const ColorVector& color) {
     this->color = color;
+    this->extendedColor = {color[0], color[1], color[2], 1.0f};
+    if (emissive) {
+        emission = {color[0], color[1], color[2], alpha}; // Keeps the glow in sync with the mesh's own color
+    }
 }
 
 const vector<Vector>& Mesh::getVertices() const {
@@ -34,6 +40,68 @@ ColorVector Mesh::getColor() const {
 }
 
 // ================================================================
+// Lighting material:
+// ================================================================
+void Mesh::setMaterial(float ambientIntensity, float diffuseIntensity, float specularIntensity, float shininess) {
+    this->ambient = {ambientIntensity, ambientIntensity, ambientIntensity, 1.0f};
+    this->diffuse = {diffuseIntensity, diffuseIntensity, diffuseIntensity, alpha}; // diffuse carries 'alpha'
+    this->specular = {specularIntensity, specularIntensity, specularIntensity, 1.0f};
+    this->shininess = shininess;
+}
+
+void Mesh::setEmission(const LightVector& emission) {
+    this->emission = emission;
+}
+
+void Mesh::setEmissive(bool emissive) {
+    this->emissive = emissive;
+
+    if (emissive) {
+        setMaterial(0.0f, 0.0f, 0.0f, 0.0f);
+        emission = {color[0], color[1], color[2], alpha};
+    } else {
+        setMaterial(0.2f, 1.0f, 0.3f, 32.0f);
+        emission = VOID_LIGHT;
+    }
+}
+
+void Mesh::setAlpha(float alpha) {
+    this->alpha = alpha;
+    diffuse[3] = alpha;
+    if (emissive) {
+        emission[3] = alpha; // So a purely emissive mesh (no diffuse response) can still fade
+    }
+}
+
+LightVector Mesh::getAmbient() const {
+    return ambient;
+}
+
+LightVector Mesh::getDiffuse() const {
+    return diffuse;
+}
+
+LightVector Mesh::getSpecular() const {
+    return specular;
+}
+
+LightVector Mesh::getEmission() const {
+    return emission;
+}
+
+float Mesh::getShininess() const {
+    return shininess;
+}
+
+bool Mesh::isEmissive() const {
+    return emissive;
+}
+
+float Mesh::getAlpha() const {
+    return alpha;
+}
+
+// ================================================================
 // Visual transformations:
 // ================================================================
 void Mesh::translate(const Vector& translation) {
@@ -42,12 +110,12 @@ void Mesh::translate(const Vector& translation) {
 
 void Mesh::rotate(const Vector& rotationCenter, double pitch, double yaw, double roll) {
     Transform::rotate(vertices, rotationCenter, pitch, yaw, roll);
-    computeFaceNormals();
+    computeVertexNormals();
 }
 
 void Mesh::scale(const Vector& scaleCenter, double scaleFactor) {
     Transform::scale(vertices, scaleCenter, scaleFactor);
-    computeFaceNormals();
+    computeVertexNormals();
 }
 
 // ================================================================
@@ -78,22 +146,45 @@ void Mesh::computeFaceNormals() {
     }
 }
 
+void Mesh::computeVertexNormals() {
+    computeFaceNormals();
+
+    vertexNormals.assign(vertices.size(), Vector{0.0, 0.0, 0.0});
+
+    // Accumulates each face's normal into every vertex it touches...
+    for (size_t f = 0; f < faces.size(); ++f) {
+        for (int index : faces[f]) {
+            vertexNormals[index] = addVectors(vertexNormals[index], faceNormals[f]);
+        }
+    }
+
+    // ...then averages
+    for (Vector& normal : vertexNormals) {
+        normal = normalize(normal);
+    }
+}
+
 // ================================================================
 // Rendering:
 // ================================================================
 void Mesh::render() const {
-    gl::color(color);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, hadamardProduct(ambient, extendedColor).data());
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, hadamardProduct(diffuse, extendedColor).data());
+    glMaterialfv(GL_FRONT, GL_SPECULAR, hadamardProduct(specular, extendedColor).data());
+    glMaterialfv(GL_FRONT, GL_SHININESS, &shininess);
+    glMaterialfv(GL_FRONT, GL_EMISSION, emission.data());
+
+    glColor4f(color[0], color[1], color[2], alpha); // Base/flat color+alpha, used if lighting is ever disabled
 
     for (size_t f = 0; f < faces.size(); ++f) {
         const Face& face = faces[f];
         if (face.size() < 3) continue;
 
-        if (f < faceNormals.size()) {
-            gl::normal(faceNormals[f]);
-        }
-
         glBegin(GL_POLYGON);
         for (int index : face) {
+            if (index < (int)vertexNormals.size()) {
+                gl::normal(vertexNormals[index]);
+            }
             gl::vertex(vertices[index]);
         }
         glEnd();
@@ -101,8 +192,11 @@ void Mesh::render() const {
 }
 
 void Mesh::renderWireframe() const {
-    gl::color(color);
+    // Lighting is disabled for wireframes rendering and the re-enabled
+    glPushAttrib(GL_LIGHTING_BIT);
+    glDisable(GL_LIGHTING);
 
+    gl::color(color);
     for (const Face& face : faces) {
         glBegin(GL_LINE_LOOP);
         for (int index : face) {
@@ -110,12 +204,14 @@ void Mesh::renderWireframe() const {
         }
         glEnd();
     }
+
+    glPopAttrib();
 }
 
 // ================================================================
 // Primitive factories:
 // ================================================================
-Mesh Mesh::generateSphere(double radius, int stacks, int slices, const ColorVector& color) {
+Mesh Mesh::generateSphere(double radius, int stacks, int slices, const ColorVector& color, bool emissive, float alpha) {
     vector<Vector> vertices;
     vector<Face> faces;
 
@@ -131,7 +227,6 @@ Mesh Mesh::generateSphere(double radius, int stacks, int slices, const ColorVect
         }
     }
 
-    // Connects the vertices into quad faces
     int verticesPerStack = slices + 1;
     for (int i = 0; i < stacks; ++i) {
         for (int j = 0; j < slices; ++j) {
@@ -147,10 +242,10 @@ Mesh Mesh::generateSphere(double radius, int stacks, int slices, const ColorVect
         }
     }
 
-    return Mesh(vertices, faces, color);
+    return Mesh(vertices, faces, color, emissive, alpha);
 }
 
-Mesh Mesh::generateOrbitRing(double radius, int segments, const ColorVector& color) {
+Mesh Mesh::generateOrbitRing(double radius, int segments, const ColorVector& color, bool emissive, float alpha) {
     vector<Vector> vertices;
     Face ring;
 
@@ -161,5 +256,53 @@ Mesh Mesh::generateOrbitRing(double radius, int segments, const ColorVector& col
     }
 
     // Stored as a single face; meant to be drawn with renderWireframe(), not render()
-    return Mesh(vertices, {ring}, color);
+    return Mesh(vertices, {ring}, color, emissive, alpha);
+}
+
+Mesh Mesh::generateTube(const vector<Vector>& centerPoints, double radius, int sides,
+                         const ColorVector& color, bool emissive, float alpha) {
+    if (centerPoints.size() < 2 || sides < 3) {
+        return Mesh({}, {}, color, emissive, alpha); // Not enough data to form a tube
+    }
+
+    int rings = (int)centerPoints.size();
+    vector<Vector> vertices;
+    vertices.reserve(rings * sides);
+
+    for (int i = 0; i < rings; ++i) {
+        // Tangent via forward (or, on the last ring, backward) difference between neighbors
+        Vector tangent = normalize(i < rings - 1
+            ? subVectors(centerPoints[i + 1], centerPoints[i])
+            : subVectors(centerPoints[i], centerPoints[i - 1]));
+
+        // Any vector not parallel to the tangent works as a seed for a perpendicular basis
+        Vector seed = (fabs(tangent[1]) < 0.99) ? Vector{0.0, 1.0, 0.0} : Vector{1.0, 0.0, 0.0};
+        Vector right = normalize(crossProduct(tangent, seed));
+        Vector trueUp = normalize(crossProduct(right, tangent));
+
+        for (int s = 0; s < sides; ++s) {
+            double angle = 2.0 * M_PI * s / sides;
+            Vector offset = {
+                (right[0] * cos(angle) + trueUp[0] * sin(angle)) * radius,
+                (right[1] * cos(angle) + trueUp[1] * sin(angle)) * radius,
+                (right[2] * cos(angle) + trueUp[2] * sin(angle)) * radius
+            };
+            vertices.push_back(addVectors(centerPoints[i], offset));
+        }
+    }
+
+    // Connects consecutive rings into quad faces, wrapping around each ring
+    vector<Face> faces;
+    faces.reserve((rings - 1) * sides);
+    for (int i = 0; i < rings - 1; ++i) {
+        for (int s = 0; s < sides; ++s) {
+            int current     = i * sides + s;
+            int currentNext = i * sides + (s + 1) % sides;
+            int next        = (i + 1) * sides + s;
+            int nextNext    = (i + 1) * sides + (s + 1) % sides;
+            faces.push_back({current, next, nextNext, currentNext});
+        }
+    }
+
+    return Mesh(vertices, faces, color, emissive, alpha);
 }

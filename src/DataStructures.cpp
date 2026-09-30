@@ -8,7 +8,7 @@ using namespace std;
 namespace DataStructures {
 
     // ================================================================
-    // Function implementations:
+    // Methods:
     // ================================================================
     Vector normalize(const Vector& v) {
         double mag = magnitude(v);
@@ -46,6 +46,16 @@ namespace DataStructures {
         return result;
     }
 
+    Vector subVectors(const Vector& u, const Vector& v) {
+        Vector result;
+        
+        for (int i = 0; i < DIMENSION; ++i) {
+            result[i] = u[i] - v[i];
+        }
+        
+        return result;
+    }
+
     Vector multiplyHMatrixVector(const HomogeneousMatrix& A, const Vector& v) {
         HomogeneousVector HVector = {v[0], v[1], v[2], 1.0}; // Convert to homogeneous coordinates
         HomogeneousVector result{};
@@ -71,6 +81,16 @@ namespace DataStructures {
 
         return result;
     }
+
+    LightVector hadamardProduct(const LightVector& u, const LightVector& v) {
+        LightVector result;
+        
+        for (int i = 0; i < 4; ++i) {
+            result[i] = u[i] * v[i];
+        }
+        
+        return result;
+    }
     
     double magnitude(const Vector& v) {
         double sumOfSquares = 0.0;
@@ -88,6 +108,34 @@ namespace DataStructures {
         }
         
         return magnitude(result);
+    }
+
+    double dotProduct(const Vector& u, const Vector& v) {
+        double result = 0.0;
+        
+        for (int i = 0; i < DIMENSION; ++i) {
+            result += u[i] * v[i];
+        }
+        
+        return result;
+    }
+
+    double findAngle3Points(const Vector& A, const Vector& vertex, const Vector& B) {
+        Vector u = subVectors(A, vertex); // Vector vertex -> A
+        Vector v = subVectors(B, vertex); // Vector vertex -> B
+
+        double magU = magnitude(u);
+        double magV = magnitude(v);
+
+        if (magU == 0.0 || magV == 0.0) return 0.0;
+
+        double cosTheta = dotProduct(u, v) / (magU * magV);
+
+        // Numerical stability: ensures the value does not slightly exceed -1 or 1 due to floating-point issues
+        if (cosTheta > 1.0)  cosTheta = 1.0;
+        if (cosTheta < -1.0) cosTheta = -1.0;
+
+        return acos(cosTheta);
     }
 
     void printVector(const Vector& v) {

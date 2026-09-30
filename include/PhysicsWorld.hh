@@ -3,6 +3,8 @@
 #define PHYSICSWORLD_H
 
 #include "../include/CelestialBody.hh"
+#include "../include/PetrovaLine.hh"
+#include "../include/SkySphere.hh"
 #include <vector>
 
 // Owns no bodies (holds raw pointers to externally-owned CelestialBody instances)
@@ -17,12 +19,20 @@ class PhysicsWorld {
         // Body management:
         // ================================================================
         void addBody(CelestialBody* body);
+        void setPetrovaLine(PetrovaLine* petrovaLine);
+        void setSkySphere(SkySphere* skySphere);
+        void setGravitationalConstant(double gravitationalConstant);
+
         const std::vector<CelestialBody*>& getBodies() const;
+        PetrovaLine* getPetrovaLine() const;
+        SkySphere* getSkySphere() const;
+        double getGravitationalConstant() const;
 
         // ================================================================
         // Simulation step:
         // ================================================================
-        // Computes gravitational forces between every pair of bodies, then integrates their motion
+        // Computes gravitational forces between every pair of bodies, integrates their
+        // motion, and advances the PetrovaLine (if one is attached) to match.
         void step(double deltaTime);
 
         // ================================================================
@@ -33,6 +43,8 @@ class PhysicsWorld {
     private:
         double G; // Gravitational constant
         std::vector<CelestialBody*> bodies;
+        PetrovaLine* petrovaLine;
+        SkySphere* skySphere;
 
         void computeGravitationalForces();
 };
