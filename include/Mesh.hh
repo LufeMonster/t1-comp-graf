@@ -15,7 +15,8 @@ class Mesh {
         Mesh(const std::vector<DataStructures::Vector>& vertices,
              const std::vector<Face>& faces,
              const DataStructures::ColorVector& color = DataStructures::WHITE,
-             bool emissive = false);
+             bool emissive = false,
+             float alpha = 1.0f);
 
         // ================================================================
         // Setters and getters:
@@ -25,6 +26,7 @@ class Mesh {
         void setEmission(const DataStructures::LightVector& emission);
         // Switches between the two material presets (true = purely self-illuminated)
         void setEmissive(bool emissive);
+        void setAlpha(float alpha); // 0.0 = fully transparent, 1.0 = fully opaque
         const std::vector<DataStructures::Vector>& getVertices() const;
         const std::vector<Face>& getFaces() const;
         DataStructures::ColorVector getColor() const;
@@ -35,6 +37,7 @@ class Mesh {
         DataStructures::LightVector getEmission() const;
         float getShininess() const;
         bool isEmissive() const;
+        float getAlpha() const;
 
         // ================================================================
         // Visual transformations:
@@ -60,9 +63,21 @@ class Mesh {
         // Primitive factories:
         // ================================================================
         // Generated centered at the origin - translate() the result to place it in the scene.
-        static Mesh generateSphere(double radius, int stacks, int slices, const DataStructures::ColorVector& color = DataStructures::WHITE, bool emissive = false);
+        static Mesh generateSphere(double radius, int stacks, int slices,
+                                    const DataStructures::ColorVector& color = DataStructures::WHITE,
+                                    bool emissive = false, float alpha = 1.0f);
         // Returns a single closed loop of points - call renderWireframe() to draw it as an orbit path
-        static Mesh generateOrbitRing(double radius, int segments, const DataStructures::ColorVector& color = DataStructures::WHITE, bool emissive = false);
+        static Mesh generateOrbitRing(double radius, int segments,
+                                       const DataStructures::ColorVector& color = DataStructures::WHITE,
+                                       bool emissive = false, float alpha = 1.0f);
+        // Builds a tube following an arbitrary polyline: a ring of 'sides' vertices is
+        // placed around each point in 'centerPoints', in the plane perpendicular to the
+        // curve's local tangent there, then consecutive rings are connected into quad
+        // faces. Needs at least 2 center points; already in world space (no translate()
+        // needed afterwards, unlike the other factories).
+        static Mesh generateTube(const std::vector<DataStructures::Vector>& centerPoints, double radius, int sides,
+                                  const DataStructures::ColorVector& color = DataStructures::WHITE,
+                                  bool emissive = false, float alpha = 1.0f);
 
     private:
         std::vector<DataStructures::Vector> vertices;
@@ -78,6 +93,7 @@ class Mesh {
         DataStructures::LightVector emission; // Light the mesh emits on its own (GEMISSION), used for self-illuminated objects, such as a star
         float shininess;
         bool emissive;
+        float alpha;
 };
 
 #endif

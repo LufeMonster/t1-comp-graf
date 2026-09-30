@@ -119,45 +119,9 @@ void PetrovaLine::createCentralLine() {
 
     double lineRadius = astrophageSize * 1.5; // A bit thicker than a single astrophage, so the line reads clearly
 
-    vector<Vector> vertices;
-    vertices.reserve((LINE_SEGMENTS + 1) * LINE_SIDES);
-
-    for (int i = 0; i <= LINE_SEGMENTS; ++i) {
-        // Tangent via forward (or, on the last ring, backward) difference
-        Vector tangent = normalize(i < LINE_SEGMENTS
-            ? subVectors(centers[i + 1], centers[i])
-            : subVectors(centers[i], centers[i - 1]));
-
-        // Any vector not parallel to the tangent works as a seed for a perpendicular basis
-        Vector seed = (fabs(tangent[1]) < 0.99) ? Vector{0.0, 1.0, 0.0} : Vector{1.0, 0.0, 0.0};
-        Vector right = normalize(crossProduct(tangent, seed));
-        Vector trueUp = normalize(crossProduct(right, tangent));
-
-        for (int s = 0; s < LINE_SIDES; ++s) {
-            double angle = 2.0 * M_PI * s / LINE_SIDES;
-            Vector offset = {
-                (right[0] * cos(angle) + trueUp[0] * sin(angle)) * lineRadius,
-                (right[1] * cos(angle) + trueUp[1] * sin(angle)) * lineRadius,
-                (right[2] * cos(angle) + trueUp[2] * sin(angle)) * lineRadius
-            };
-            vertices.push_back(addVectors(centers[i], offset));
-        }
-    }
-
-    // Connects consecutive rings into quad faces, wrapping around each ring
-    vector<Mesh::Face> faces;
-    faces.reserve(LINE_SEGMENTS * LINE_SIDES);
-    for (int i = 0; i < LINE_SEGMENTS; ++i) {
-        for (int s = 0; s < LINE_SIDES; ++s) {
-            int current     = i * LINE_SIDES + s;
-            int currentNext = i * LINE_SIDES + (s + 1) % LINE_SIDES;
-            int next        = (i + 1) * LINE_SIDES + s;
-            int nextNext    = (i + 1) * LINE_SIDES + (s + 1) % LINE_SIDES;
-            faces.push_back({current, next, nextNext, currentNext});
-        }
-    }
-
-    centralLine = Mesh(vertices, faces, ORANGE, true); // Emissive, so the line reads clearly along its whole length
+    // Emissive (reads clearly along its whole length) and translucent (alpha < 1) so it
+    // marks the astrophages' general direction without hiding them.
+    centralLine = Mesh::generateTube(centers, lineRadius, LINE_SIDES, MAGENTA, /* emissive = */ true, /* alpha = */ 0.35f);
 }
 
 Vector PetrovaLine::calculatePoint(float t, bool isDist) {

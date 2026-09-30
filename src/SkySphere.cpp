@@ -5,8 +5,8 @@ using namespace std;
 using namespace DataStructures;
 
 // --- Class constructor ---
-SkySphere::SkySphere(const Vector& center, int starCount, double starSize)
-    : center(center), starCount(starCount), starSize(starSize), gen(random_device{}()), dis(0.0, 1.0) {
+SkySphere::SkySphere(const Vector& center, int starCount, double starSize, double radius)
+    : center(center), starCount(starCount), starSize(starSize), radius(radius), gen(random_device{}()), dis(0.0, 1.0) {
     createStars();
 }
 
@@ -28,6 +28,11 @@ void SkySphere::setStarSize(double starSize) {
     createStars();
 }
 
+void SkySphere::setRadius(double radius) {
+    this->radius = radius;
+    createStars();
+}
+
 Vector SkySphere::getCenter() const {
     return center;
 }
@@ -38,6 +43,10 @@ int SkySphere::getStarCount() const {
 
 double SkySphere::getStarSize() const {
     return starSize;
+}
+
+double SkySphere::getRadius() const {
+    return radius;
 }
 
 const vector<Mesh>& SkySphere::getStars() const {
@@ -77,5 +86,5 @@ Vector SkySphere::randomPointOnSphere() {
     double r = sqrt(zSquaredComplement < 0.0 ? 0.0 : zSquaredComplement);
 
     Vector direction = {r * cos(theta), z, r * sin(theta)};
-    return addVectors(center, multiplyVectorScalar(direction, SKY_RADIUS));
+    return addVectors(center, multiplyVectorScalar(direction, radius));
 }

@@ -49,7 +49,7 @@ LightSource* sunLight(new LightSource(sun->getPosition(), DEFAULT_AMBIENT_LIGHT,
 
 Simulation simulation(camera, physicsWorld);
 PetrovaLine* petrovaLine(new PetrovaLine(sun, earth, 128, 1.0, 5.0f));
-SkySphere* skySphere(new SkySphere({0.0, 0.0, 0.0}, /* starCount = */ 400, /* starSize = */ 1.0));
+SkySphere* skySphere(new SkySphere({0.0, 0.0, 0.0}, /* starCount = */ 400, /* starSize = */ 1.0, /* radius = */ 2048.0));
 
 array<int, 2> windowWidthHeight = {1024, 576};
 
@@ -58,6 +58,8 @@ void initOpenGL(void) {
 
     glEnable(GL_DEPTH_TEST);   // activate the zBuffer
     glShadeModel(GL_SMOOTH);
+    glEnable(GL_BLEND);                                // needed for Mesh's alpha (e.g. PetrovaLine's central tube)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	camera->setFov(45.0);
 

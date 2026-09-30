@@ -10,7 +10,7 @@ Simulation* Simulation::instance = nullptr;
 
 // --- Class constructor and destructor ---
 Simulation::Simulation(Camera* camera, PhysicsWorld* physicsWorld) : 
-    camera(camera), physicsWorld(physicsWorld), lastMouseX(0), lastMouseY(0), isMousePressed(false), isShiftPressed(false), previousTime(0), deltaTime(0.0) {
+    camera(camera), physicsWorld(physicsWorld), lastMouseX(0), lastMouseY(0), isMousePressed(false), isShiftPressed(false), previousTime(0), deltaTime(0.0), simulationSpeed(1.0) {
 
     instance = this;
     for(int i = 0; i < 256; i++) keyStates[i] = false;
@@ -22,6 +22,10 @@ Simulation::Simulation(Camera* camera, PhysicsWorld* physicsWorld) :
 Simulation::~Simulation() {
     if (instance == this)
         instance = nullptr;
+}
+
+double Simulation::getSimulationSpeed() const {
+    return simulationSpeed;
 }
 
 // ================================================================
@@ -49,7 +53,7 @@ void Simulation::updateSimulation() {
     // --- Physics simulation ---
     // Always pass 'deltaTime' to your physics functions! 
     if (physicsWorld != nullptr) {
-        physicsWorld->step(deltaTime/4.0);
+        physicsWorld->step(deltaTime/4.0 * simulationSpeed);
     }
 
     glutPostRedisplay();
@@ -73,6 +77,15 @@ void Simulation::keyboardControl(unsigned char key, int x, int y) {
         camera->setFov(get<5>(initialParameters));
         camera->setAspectRatio(get<6>(initialParameters));
         camera->setNearFarPlanes(get<7>(initialParameters), get<8>(initialParameters));
+    }
+
+    if (key == 'm') {
+        simulationSpeed += SIMULATION_SPEED_STEP;
+        if (simulationSpeed > MAX_SIMULATION_SPEED) simulationSpeed = MAX_SIMULATION_SPEED;
+    }
+    if (key == 'n') {
+        simulationSpeed -= SIMULATION_SPEED_STEP;
+        if (simulationSpeed < MIN_SIMULATION_SPEED) simulationSpeed = MIN_SIMULATION_SPEED;
     }
 }
 
