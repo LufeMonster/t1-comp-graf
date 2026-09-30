@@ -9,7 +9,7 @@
 #include <random>
 
 // "Petrova line" from Project Hail Mary: a stream of astrophages strung along 
-// a Bezier curve between a star and a CO2-rich planet. No physics of its own.
+// a Bezier curve between a star and a CO2-rich planet. No physics of its own
 class PetrovaLine {
     public:
         // ================================================================

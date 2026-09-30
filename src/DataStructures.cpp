@@ -175,16 +175,3 @@ namespace DataStructures {
         };
     }
 }
-/*
-Vector multiplyVectorMatrix(const Vector& v, const HomogeneousMatrix& A) {
-    HomogeneousVector HVector = {v[0], v[1], v[2], 1.0}; // Convert to homogeneous coordinates
-    HomogeneousVector result{};
-
-    for (int j = 0; j < (DIMENSION + 1); ++j) {
-        for (int i = 0; i < (DIMENSION + 1); ++i) {
-            result[j] += HVector[i] * A[i][j]; // Traverses down the matrix column
-        }
-    }
-    return {result[0], result[1], result[2]}; // Convert back to 3D coordinates
-}
-*/

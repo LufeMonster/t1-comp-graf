@@ -8,8 +8,7 @@
 #include <random>
 
 // A purely visual backdrop: a field of small, low-polygon, emissive spheres ("stars")
-// scattered randomly across the surface of one big sphere centered on the scene. In the
-// same spirit as PetrovaLine - just meshes and random scattering, no physics.
+// scattered randomly across the surface of one big sphere centered on the scene.
 class SkySphere {
     public:
         // --- Class constructor ---

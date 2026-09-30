@@ -8,10 +8,7 @@
 class LightSource {
     public:
         // --- Class constructor ---
-        LightSource(const DataStructures::Vector& position,
-                    const DataStructures::LightVector& ambientLight,
-                    const DataStructures::LightVector& diffuseLight,
-                    const DataStructures::LightVector& specularLight);
+        LightSource(const DataStructures::Vector& position, const DataStructures::LightVector& ambientLight, const DataStructures::LightVector& diffuseLight, const DataStructures::LightVector& specularLight);
 
         // ================================================================
         // Setters and getters:

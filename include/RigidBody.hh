@@ -8,9 +8,7 @@
 class RigidBody {
     public:
         // --- Class constructor ---
-        RigidBody(const DataStructures::Vector& position = {0.0, 0.0, 0.0},
-                  double mass = 1.0,
-                  const DataStructures::Vector& velocity = {0.0, 0.0, 0.0});
+        RigidBody(const DataStructures::Vector& position = {0.0, 0.0, 0.0}, double mass = 1.0, const DataStructures::Vector& velocity = {0.0, 0.0, 0.0});
 
         // ================================================================
         // Setters and getters:

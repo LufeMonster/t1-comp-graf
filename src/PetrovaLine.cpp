@@ -6,7 +6,7 @@ using namespace std;
 using namespace DataStructures;
 
 // --- Class constructor ---
-PetrovaLine::PetrovaLine(CelestialBody* sun, CelestialBody* CO2planet, int resolution, double astrophageSize, float distribution) : 
+PetrovaLine::PetrovaLine(CelestialBody* sun, CelestialBody* CO2planet, int resolution, double astrophageSize, float distribution) :
     sun(sun), CO2planet(CO2planet), resolution(resolution), astrophageSize(astrophageSize), distribution(distribution), gen(random_device{}()), dis(-0.5, 0.5) {
     oldCO2planetPosition = CO2planet->getPosition();
     bezierPoints = calculateBezierPoints();
@@ -76,7 +76,7 @@ void PetrovaLine::advance() {
 
     for(int i = 0; i < (int)astrophages.size(); i++)
         astrophages[i].rotate(sunPosition, 0.0, -angle, 0.0);
-    centralLine.rotate(sunPosition, 0.0, -angle, 0.0); // Keeps the tube glued to the same drift as the astrophages
+    centralLine.rotate(sunPosition, 0.0, -angle, 0.0);
 }
 
 // ================================================================
@@ -117,10 +117,8 @@ void PetrovaLine::createCentralLine() {
         centers.push_back(calculatePoint((float)i / (float)LINE_SEGMENTS, false));
     }
 
-    double lineRadius = astrophageSize * 1.5; // A bit thicker than a single astrophage, so the line reads clearly
+    double lineRadius = astrophageSize * 1.5;
 
-    // Emissive (reads clearly along its whole length) and translucent (alpha < 1) so it
-    // marks the astrophages' general direction without hiding them.
     centralLine = Mesh::generateTube(centers, lineRadius, LINE_SIDES, MAGENTA, /* emissive = */ true, /* alpha = */ 0.35f);
 }
 

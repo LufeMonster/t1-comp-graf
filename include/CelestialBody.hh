@@ -10,10 +10,7 @@
 class CelestialBody {
     public:
         // --- Class constructor ---
-        CelestialBody(const std::string& name, double mass, double radius,
-                      const DataStructures::Vector& initialPosition,
-                      const DataStructures::Vector& initialVelocity,
-                      const Mesh& mesh);
+        CelestialBody(const std::string& name, double mass, double radius, const DataStructures::Vector& initialPosition, const DataStructures::Vector& initialVelocity, const Mesh& mesh);
 
         // ================================================================
         // Getters:
@@ -31,13 +28,13 @@ class CelestialBody {
         // Simulation:
         // ================================================================
         // Integrates the RigidBody by deltaTime and moves the Mesh's vertices by the
-        // resulting change in position, keeping the visual and physical positions in sync.
+        // resulting change in position, keeping the visual and physical positions in sync
         void advance(double deltaTime);
-
-        // Applies an axial spin to the mesh, rotated around the body's current position.
+        // Applies an axial spin to the mesh, rotated around the body's current position
         void spin(double pitch, double yaw, double roll);
-        // Scales the body's mesh around its current position.
+        // Scales the body's mesh around its current position
         void scale(double scaleFactor);
+
         // ================================================================
         // Rendering:
         // ================================================================

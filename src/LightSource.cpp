@@ -4,8 +4,8 @@ using namespace std;
 using namespace DataStructures;
 
 // --- Class constructor ---
-LightSource::LightSource(const Vector& position, const LightVector& ambientLight, const LightVector& diffuseLight, const LightVector& specularLight)
-    : position(position), ambientLight(ambientLight), diffuseLight(diffuseLight), specularLight(specularLight) {
+LightSource::LightSource(const Vector& position, const LightVector& ambientLight, const LightVector& diffuseLight, const LightVector& specularLight) :
+    position(position), ambientLight(ambientLight), diffuseLight(diffuseLight), specularLight(specularLight) {
 }
 
 // ================================================================

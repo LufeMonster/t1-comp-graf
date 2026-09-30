@@ -27,9 +27,7 @@ class Simulation {
         void mouseControl(int button, int state, int x, int y);
         void mouseMotionControl(int x, int y);
 
-        // Multiplier applied to the PhysicsWorld's deltaTime only - adjusted with '+'/'-'
-        // (camera movement speed is unaffected; see updateSimulation()).
-        double getSimulationSpeed() const;
+        double getSimulationSpeed() const; // Multiplier applied to the PhysicsWorld's deltaTime only
         
         // --- Static callbacks for Glut ---
         static void glutKeyboardCallback(unsigned char key, int x, int y) { if (instance != nullptr) instance->keyboardControl(key, x, y); };

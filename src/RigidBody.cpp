@@ -5,8 +5,8 @@ using namespace std;
 using namespace DataStructures;
 
 // --- Class constructor ---
-RigidBody::RigidBody(const Vector& position, double mass, const Vector& velocity)
-    : position(position), mass(mass), velocity(velocity), accumulatedForce({0.0, 0.0, 0.0}) {
+RigidBody::RigidBody(const Vector& position, double mass, const Vector& velocity) :
+    position(position), mass(mass), velocity(velocity), accumulatedForce({0.0, 0.0, 0.0}) {
 }
 
 // ================================================================

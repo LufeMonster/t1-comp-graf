@@ -13,10 +13,8 @@ namespace Transform {
     void translate(DataStructures::Vector& point, const DataStructures::Vector& translation);
     void translate(std::vector<DataStructures::Vector>& points, const DataStructures::Vector& translation);
 
-    void rotate(DataStructures::Vector& point, const DataStructures::Vector& rotationCenter,
-                double pitch, double yaw, double roll);
-    void rotate(std::vector<DataStructures::Vector>& points, const DataStructures::Vector& rotationCenter,
-                double pitch, double yaw, double roll);
+    void rotate(DataStructures::Vector& point, const DataStructures::Vector& rotationCenter, double pitch, double yaw, double roll);
+    void rotate(std::vector<DataStructures::Vector>& points, const DataStructures::Vector& rotationCenter, double pitch, double yaw, double roll);
 
     void scale(DataStructures::Vector& point, const DataStructures::Vector& scaleCenter, double scaleFactor);
     void scale(std::vector<DataStructures::Vector>& points, const DataStructures::Vector& scaleCenter, double scaleFactor);
@@ -25,8 +23,7 @@ namespace Transform {
     // Matrix builders:
     // ================================================================
     DataStructures::HomogeneousMatrix getTranslationMatrix(const DataStructures::Vector& translation);
-    DataStructures::HomogeneousMatrix getRotationMatrix(const DataStructures::Vector& rotationCenter,
-                                                          double pitch, double yaw, double roll);
+    DataStructures::HomogeneousMatrix getRotationMatrix(const DataStructures::Vector& rotationCenter, double pitch, double yaw, double roll);
     DataStructures::HomogeneousMatrix getScaleMatrix(const DataStructures::Vector& scaleCenter, double scaleFactor);
 
     // ================================================================

@@ -14,8 +14,8 @@ class Camera {
         // ================================================================
         // Type aliases:
         // ================================================================
+        // initialPosition, initialUp, initialPitch, initialYaw, initialRoll, initialFov, initialAspectRatio, initialNearPlane, initialFarPlane
         using initialParametersTuple = std::tuple<DataStructures::Vector, DataStructures::Vector, double, double, double, double, double, double, double>;
-            // initialPosition, initialUp, initialPitch, initialYaw, initialRoll, initialFov, initialAspectRatio, initialNearPlane, initialFarPlane
 
         // ================================================================
         // Setters and getters for camera properties:
@@ -45,7 +45,6 @@ class Camera {
         void moveForwardBackward(double distance);
         void moveLeftRight(double distance);
         void updateRotation(double deltaPitch, double deltaYaw);
-        //void updateRotation(double deltaPitch, double deltaYaw, double deltaRoll);
         void lookAt(const DataStructures::Vector& target);
 
     private:
@@ -55,8 +54,7 @@ class Camera {
         DataStructures::Vector position, direction, up;
         double pitch, yaw, roll; // pitch = up/down (X axis), yaw = left/right (Y axis), roll = tilt rotation (Z axis)
         double fov, aspectRatio, nearPlane, farPlane;
-        initialParametersTuple initialParameters;
-            // initialPosition, initialUp, initialPitch, initialYaw, initialRoll, initialFov, initialAspectRatio, initialNearPlane, initialFarPlane
+        initialParametersTuple initialParameters; // initialPosition, initialUp, initialPitch, initialYaw, initialRoll, initialFov, initialAspectRatio, initialNearPlane, initialFarPlane
 };
 
 #endif

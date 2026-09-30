@@ -15,13 +15,12 @@ using namespace std;
 using namespace DataStructures;
 
 const Vector initialCameraPosition = {0.0, 128.0, 256.0};
-Camera* camera(new Camera(initialCameraPosition, -0.524, 2.618, 0.0, {0, 1, 0}, 45.0, 1.333)); // -30, 150
+Camera* camera(new Camera(initialCameraPosition, -0.524, 2.618, 0.0, {0, 1, 0}, 45.0, 1.333)); // pitch = -30°, yaw = 150°
 
 // ================================================================
 // Scene setup:
 // ================================================================
-// NOTE: these mass/distance/G values are scaled for a visually pleasant simulation,
-// not real astronomical units (real values would be either invisibly tiny or huge on screen).
+// NOTE: these mass/distance/G values are scaled for a visually pleasant simulation
 PhysicsWorld* physicsWorld(new PhysicsWorld(/* gravitationalConstant = */ 256.0));
 CelestialBody* sun(new CelestialBody(
     "Sun", /* mass = */ 65536.0, /* radius = */ 32.0,
@@ -51,7 +50,7 @@ CelestialBody* earth(new CelestialBody(
 //     Mesh::generateSphere(2.5, 12, 12, LIGHT_GRAY)
 // ));
 
-// The Sun doubles as the scene's light source.
+// --- The Sun doubles as the scene's light source ---
 LightSource* sunLight(new LightSource(sun->getPosition(), DEFAULT_AMBIENT_LIGHT, DEFAULT_DIFFUSE_LIGHT, DEFAULT_SPECULAR_LIGHT));
 
 Simulation simulation(camera, physicsWorld);
@@ -61,8 +60,7 @@ SkySphere* skySphere(new SkySphere({0.0, 0.0, 0.0}, /* starCount = */ 256, /* st
 array<int, 2> windowWidthHeight = {1024, 576};
 
 void initOpenGL(void) {
-	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClearColor(BLACK[0], BLACK[1], BLACK[2], 1.0f);
+    glClearColor(0.0f, 0.0f, 0.02f, 1.0f);
 
     glEnable(GL_DEPTH_TEST);   // activate the zBuffer
     glShadeModel(GL_SMOOTH);
@@ -94,68 +92,11 @@ void reshape(int width, int height) {
 
 }
 
-void drawStars() {
-    glPointSize(2.0f);
-    glColor3f(1.0f, 1.0f, 1.0f);
-
-    glBegin(GL_POINTS);
-
-    glVertex3f(-150.0f, 100.0f, -100.0f);
-    glVertex3f(-100.0f, 70.0f, -150.0f);
-    glVertex3f(-50.0f, 120.0f, -200.0f);
-    glVertex3f(20.0f, 90.0f, -180.0f);
-    glVertex3f(70.0f, 130.0f, -150.0f);
-    glVertex3f(120.0f, 80.0f, -200.0f);
-    glVertex3f(160.0f, 110.0f, -120.0f);
-
-    glVertex3f(-170.0f, -80.0f, -150.0f);
-    glVertex3f(-120.0f, -120.0f, -180.0f);
-    glVertex3f(-60.0f, -90.0f, -200.0f);
-    glVertex3f(40.0f, -110.0f, -170.0f);
-    glVertex3f(100.0f, -70.0f, -200.0f);
-    glVertex3f(170.0f, -100.0f, -140.0f);
-
-    // More stars
-    glVertex3f(-190.0f, 140.0f, -220.0f);
-    glVertex3f(-160.0f, 40.0f, -190.0f);
-    glVertex3f(-130.0f, 150.0f, -250.0f);
-    glVertex3f(-90.0f, 20.0f, -220.0f);
-    glVertex3f(-70.0f, 160.0f, -170.0f);
-    glVertex3f(-30.0f, 50.0f, -240.0f);
-    glVertex3f(10.0f, 150.0f, -230.0f);
-    glVertex3f(45.0f, 40.0f, -190.0f);
-    glVertex3f(90.0f, 160.0f, -240.0f);
-    glVertex3f(140.0f, 30.0f, -210.0f);
-    glVertex3f(190.0f, 150.0f, -230.0f);
-
-    glVertex3f(-200.0f, -30.0f, -210.0f);
-    glVertex3f(-155.0f, -50.0f, -240.0f);
-    glVertex3f(-110.0f, -160.0f, -220.0f);
-    glVertex3f(-80.0f, -40.0f, -180.0f);
-    glVertex3f(-30.0f, -150.0f, -230.0f);
-    glVertex3f(10.0f, -50.0f, -210.0f);
-    glVertex3f(60.0f, -160.0f, -240.0f);
-    glVertex3f(90.0f, -30.0f, -190.0f);
-    glVertex3f(130.0f, -150.0f, -220.0f);
-    glVertex3f(190.0f, -40.0f, -250.0f);
-
-    glVertex3f(-180.0f, 10.0f, -260.0f);
-    glVertex3f(-140.0f, 110.0f, -280.0f);
-    glVertex3f(-75.0f, 85.0f, -270.0f);
-    glVertex3f(-20.0f, 10.0f, -290.0f);
-    glVertex3f(35.0f, 115.0f, -270.0f);
-    glVertex3f(80.0f, 60.0f, -290.0f);
-    glVertex3f(135.0f, 100.0f, -260.0f);
-    glVertex3f(180.0f, 20.0f, -280.0f);
-
-    glEnd();
-}
-
 void draw(void) {
 	// --- Clear screen ---
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-     // --- Update perspective ---
+    // --- Update perspective ---
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
@@ -185,11 +126,8 @@ void draw(void) {
     // ================================================================
     // Shapes to draw:
     // ================================================================
-    
-    drawStars();
 
-    physicsWorld->renderAll(); // draws every registered CelestialBody at its current Transform
-    physicsWorld->renderAll(); // draws every registered CelestialBody
+    physicsWorld->renderAll(); // draws everything in world
 
     glutSwapBuffers();
 }
@@ -199,7 +137,6 @@ array<int, 2> windowStart = {(1920 - windowWidthHeight[0]) / 2, (1080 - windowWi
 int main(int argc, char** argv) {
 
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(windowWidthHeight[0], windowWidthHeight[1]);
     glutInitWindowPosition(windowStart[0], windowStart[1]);

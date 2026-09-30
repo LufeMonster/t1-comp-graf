@@ -5,8 +5,8 @@ using namespace std;
 using namespace DataStructures;
 
 // --- Class constructor ---
-SkySphere::SkySphere(const Vector& center, int starCount, double starSize, double radius)
-    : center(center), starCount(starCount), starSize(starSize), radius(radius), gen(random_device{}()), dis(0.0, 1.0) {
+SkySphere::SkySphere(const Vector& center, int starCount, double starSize, double radius) :
+    center(center), starCount(starCount), starSize(starSize), radius(radius), gen(random_device{}()), dis(0.0, 1.0) {
     createStars();
 }
 

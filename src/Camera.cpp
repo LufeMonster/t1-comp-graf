@@ -6,17 +6,12 @@ using namespace std;
 using namespace DataStructures;
 
 // --- Class constructor and destructor ---
-Camera::Camera(const Vector& position, double pitch, double yaw, double roll, const Vector& up, double fov, double aspectRatio) {
-    this->position = position;
-    this->direction = {cos(pitch) * sin(yaw), sin(pitch), cos(pitch) * cos(yaw)};
-    this->up = up;
+Camera::Camera(const Vector& position, double pitch, double yaw, double roll, const Vector& up, double fov, double aspectRatio) :
+    position(position), up(up), yaw(yaw), roll(roll), fov(fov), aspectRatio(aspectRatio) {
 
     this->pitch = clamp(pitch, -1.56905, 1.56905);
-    this->yaw = yaw;
-    this->roll = roll;
+    this->direction = {cos(this->pitch) * sin(yaw), sin(this->pitch), cos(this->pitch) * cos(yaw)};
 
-    this->fov = fov;
-    this->aspectRatio = aspectRatio;
     this->nearPlane = 0.1;
     this->farPlane = 4096.0;
 
@@ -136,61 +131,3 @@ void Camera::lookAt(const Vector& target) {
     double length = sqrt(newDirection[0] * newDirection[0] + newDirection[1] * newDirection[1] + newDirection[2] * newDirection[2]);
     direction = {newDirection[0] / length, newDirection[1] / length, newDirection[2] / length};
 }
-
-/*
-void Camera::updateRotation(double deltaPitch, double deltaYaw, double deltaRoll) {
-    HomogeneousMatrix rotationHMatrixPitch = {{
-        {1.0, 0.0, 0.0, 0.0},
-        {0.0, cos(deltaPitch), -sin(deltaPitch), 0.0},
-        {0.0, sin(deltaPitch), cos(deltaPitch), 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-    }};
-    HomogeneousMatrix rotationHMatrixYaw = {{
-        {cos(deltaYaw), 0.0, sin(deltaYaw), 0.0},
-        {0.0, 1.0, 0.0, 0.0},
-        {-sin(deltaYaw), 0.0, cos(deltaYaw), 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-    }};
-    HomogeneousMatrix rotationHMatrixRoll = {{
-        {cos(deltaRoll), -sin(deltaRoll), 0.0, 0.0},
-        {sin(deltaRoll), cos(deltaRoll), 0.0, 0.0},
-        {0.0, 0.0, 1.0, 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-    }};
-    HomogeneousMatrix rotationHMatrix = multiplyHMatrices(
-        rotationHMatrixYaw, multiplyHMatrices(
-            rotationHMatrixPitch, rotationHMatrixRoll));
-    direction = multiplyHMatrixVector(rotationHMatrix, direction);
-}
-*/
-
-/*
-    this->pitch += deltaPitch;
-    this->yaw += deltaYaw;
-    this->roll += deltaRoll;
-
-    float tempX = direction[0];
-    float tempY = direction[1];
-    float tempZ = direction[2];
-    direction[0] = tempX * cos(yaw) - tempZ * sin(yaw) + position[0];
-    direction[1] = tempY * cos(pitch) - tempZ * sin(pitch) + position[1];
-    direction[2] = tempX * sin(yaw) + tempZ * cos(yaw) + position[2];
-*/
-
-/*
-    HomogeneousMatrix rotationMatrixPitch = {{
-        {1.0, 0.0, 0.0, 0.0},
-        {0.0, cos(pitch), -sin(pitch), 0.0},
-        {0.0, sin(pitch), cos(pitch), 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-    }};
-    HomogeneousMatrix rotationMatrixYaw = {{
-        {cos(yaw), 0.0, sin(yaw), 0.0},
-        {0.0, 1.0, 0.0, 0.0},
-        {-sin(yaw), 0.0, cos(yaw), 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-    }};
-    HomogeneousMatrix rotationMatrix = multiplyHMatrices(
-        rotationMatrixYaw, rotationMatrixPitch);
-    direction = multiplyHMatrixVector(rotationMatrix, direction);
-*/

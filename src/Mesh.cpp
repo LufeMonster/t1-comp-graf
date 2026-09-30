@@ -9,10 +9,10 @@ using namespace DataStructures;
 Mesh::Mesh() : Mesh({}, {}, WHITE, false, 1.0f) {
 }
 
-Mesh::Mesh(const vector<Vector>& vertices, const vector<Face>& faces, const ColorVector& color, bool emissive, float alpha)
-    : vertices(vertices), faces(faces), color(color), alpha(alpha) {
+Mesh::Mesh(const vector<Vector>& vertices, const vector<Face>& faces, const ColorVector& color, bool emissive, float alpha) :
+    vertices(vertices), faces(faces), color(color), alpha(alpha) {
     this->extendedColor = {color[0], color[1], color[2], 1.0f};
-    setEmissive(emissive); // Sets the default reacts-to-light material, or the self-illuminated one
+    setEmissive(emissive);
     computeVertexNormals();
 }
 
@@ -25,18 +25,6 @@ void Mesh::setColor(const ColorVector& color) {
     if (emissive) {
         emission = {color[0], color[1], color[2], alpha}; // Keeps the glow in sync with the mesh's own color
     }
-}
-
-const vector<Vector>& Mesh::getVertices() const {
-    return vertices;
-}
-
-const vector<Mesh::Face>& Mesh::getFaces() const {
-    return faces;
-}
-
-ColorVector Mesh::getColor() const {
-    return color;
 }
 
 // ================================================================
@@ -69,8 +57,20 @@ void Mesh::setAlpha(float alpha) {
     this->alpha = alpha;
     diffuse[3] = alpha;
     if (emissive) {
-        emission[3] = alpha; // So a purely emissive mesh (no diffuse response) can still fade
+        emission[3] = alpha; // So a purely emissive mesh can still fade
     }
+}
+
+const vector<Vector>& Mesh::getVertices() const {
+    return vertices;
+}
+
+const vector<Mesh::Face>& Mesh::getFaces() const {
+    return faces;
+}
+
+ColorVector Mesh::getColor() const {
+    return color;
 }
 
 LightVector Mesh::getAmbient() const {
@@ -192,7 +192,7 @@ void Mesh::render() const {
 }
 
 void Mesh::renderWireframe() const {
-    // Lighting is disabled for wireframes rendering and the re-enabled
+    // Lighting is disabled for wireframes rendering and then re-enabled
     glPushAttrib(GL_LIGHTING_BIT);
     glDisable(GL_LIGHTING);
 
@@ -258,6 +258,11 @@ Mesh Mesh::generateOrbitRing(double radius, int segments, const ColorVector& col
     // Stored as a single face; meant to be drawn with renderWireframe(), not render()
     return Mesh(vertices, {ring}, color, emissive, alpha);
 }
+
+// Builds a tube following an arbitrary polyline: a ring of 'sides' vertices is
+// placed around each point in 'centerPoints', in the plane perpendicular to the
+// curve's local tangent there, then consecutive rings are connected into quad
+// faces.
 
 Mesh Mesh::generateTube(const vector<Vector>& centerPoints, double radius, int sides,
                          const ColorVector& color, bool emissive, float alpha) {

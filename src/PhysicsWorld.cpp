@@ -4,8 +4,8 @@ using namespace std;
 using namespace DataStructures;
 
 // --- Class constructor ---
-PhysicsWorld::PhysicsWorld(double gravitationalConstant)
-    : G(gravitationalConstant), petrovaLine(nullptr), skySphere(nullptr) {
+PhysicsWorld::PhysicsWorld(double gravitationalConstant) :
+    G(gravitationalConstant), petrovaLine(nullptr), skySphere(nullptr) {
 }
 
 // ================================================================
@@ -93,15 +93,11 @@ void PhysicsWorld::computeGravitationalForces() {
 // Rendering:
 // ================================================================
 void PhysicsWorld::renderAll() const {
-    if (skySphere != nullptr) {
-        skySphere->render(); // Drawn first, as a distant backdrop behind everything else
-    }
+    if (skySphere != nullptr) skySphere->render(); // Drawn first, as a distant backdrop
 
     for (const CelestialBody* body : bodies) {
         body->render();
     }
 
-    if (petrovaLine != nullptr) {
-        petrovaLine->render();
-    }
+    if (petrovaLine != nullptr) petrovaLine->render();
 }

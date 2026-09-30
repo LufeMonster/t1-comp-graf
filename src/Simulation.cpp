@@ -15,8 +15,7 @@ Simulation::Simulation(Camera* camera, PhysicsWorld* physicsWorld) :
     instance = this;
     for(int i = 0; i < 256; i++) keyStates[i] = false;
     
-    // Initializes the time with system time when the object is created
-    previousTime = glutGet(GLUT_ELAPSED_TIME);
+    previousTime = glutGet(GLUT_ELAPSED_TIME); // Initializes the time with system time when the object is created
 }
 
 Simulation::~Simulation() {
@@ -51,16 +50,16 @@ void Simulation::updateSimulation() {
     if (keyStates['c']) camera->move({0.0, -translationSpeed, 0.0});
 
     // --- Physics simulation ---
-    // Always pass 'deltaTime' to your physics functions! 
+    // Pass 'deltaTime' to physics for smooth simulation
     if (physicsWorld != nullptr) {
         physicsWorld->step(deltaTime/4.0 * simulationSpeed);
-    }
-    for (CelestialBody* body : physicsWorld->getBodies()) {
-    if (body->getName() == "Earth") {
-        body->spin(0.0, 0.5 * deltaTime, 0.0);
-    }
-}
 
+        // Rotate Earth
+        for (CelestialBody* body : physicsWorld->getBodies()) {
+            if (body->getName() == "Earth")
+                body->spin(0.0, 0.5 * deltaTime, 0.0);
+        }
+    }
     //cout << "pos: " << camera->getPosition()[0] << ", " << camera->getPosition()[1] << ", " << camera->getPosition()[2] << "." << endl;
     //cout << "dir: " << camera->getDirection()[0] << ", " << camera->getDirection()[1] << ", " << camera->getDirection()[2] << "." << endl;
 
@@ -85,44 +84,37 @@ void Simulation::keyboardControl(unsigned char key, int x, int y) {
         camera->setFov(get<5>(initialParameters));
         camera->setAspectRatio(get<6>(initialParameters));
         camera->setNearFarPlanes(get<7>(initialParameters), get<8>(initialParameters));
-    }
-    if (key == '+') {
-    for (CelestialBody* body : physicsWorld->getBodies()) {
-        if (body->getName() == "Earth") {
-            body->scale(1.1);
+        
+    } else if (key == '+') {
+        for (CelestialBody* body : physicsWorld->getBodies()) {
+            if (body->getName() == "Earth")
+                body->scale(1.1);
         }
-    }
-    }
-    if (key == '-') {
-    for (CelestialBody* body : physicsWorld->getBodies()) {
-        if (body->getName() == "Earth") {
-            body->scale(0.9);
+    } else if (key == '-') {
+        for (CelestialBody* body : physicsWorld->getBodies()) {
+            if (body->getName() == "Earth")
+                body->scale(0.9);
         }
-    }
-    }
-    if (key == 'p') {
-    double newFov = camera->getFov() + 5.0;
+    } else if (key == 'p') {
+        double newFov = camera->getFov() + 5.0;
+        if (newFov <= 120.0)
+            camera->setFov(newFov);
 
-    if (newFov <= 120.0) {
-        camera->setFov(newFov);
-    }
-}
+    } else if (key == 'o') {
+        double newFov = camera->getFov() - 5.0;
+        if (newFov >= 20.0)
+            camera->setFov(newFov);
 
-if (key == 'o') {
-    double newFov = camera->getFov() - 5.0;
-
-    if (newFov >= 20.0) {
-        camera->setFov(newFov);
-    }
-}
-
-    if (key == 'm') {
+    } else if (key == 'm') {
         simulationSpeed += SIMULATION_SPEED_STEP;
-        if (simulationSpeed > MAX_SIMULATION_SPEED) simulationSpeed = MAX_SIMULATION_SPEED;
-    }
-    if (key == 'n') {
+        if (simulationSpeed > MAX_SIMULATION_SPEED)
+            simulationSpeed = MAX_SIMULATION_SPEED;
+            
+    } else if (key == 'n') {
         simulationSpeed -= SIMULATION_SPEED_STEP;
-        if (simulationSpeed < MIN_SIMULATION_SPEED) simulationSpeed = MIN_SIMULATION_SPEED;
+        if (simulationSpeed < MIN_SIMULATION_SPEED)
+            simulationSpeed = MIN_SIMULATION_SPEED;
+
     }
 }
 

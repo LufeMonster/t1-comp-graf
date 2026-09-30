@@ -1,6 +1,6 @@
 # Astronomical Simulator (C++ / GLUT / OpenGL)
 
-> *Placeholder for the final project description: goal, motivation, context (coursework, personal project, etc.), and build/run instructions.*
+> *Assignment 1 for the Computer Graphics course in the Bachelor of Computer Science program at FFCLRP (USP). This project aims to implement a gravitational simulation while using concepts learned in the cited course. To run, install GLUT / OpenGL and compile whith: "g++ main.cpp DataStructures.cpp Camera.cpp Simulation.cpp Transform.cpp Mesh.cpp RigidBody.cpp CelestialBody.cpp PhysicsWorld.cpp LightSource.cpp PetrovaLine.cpp SkySphere.cpp -o main -lglut -lGLU -lGL -lm"*
 
 ## Architecture overview
 
@@ -126,12 +126,3 @@ if (physicsWorld != nullptr) {
 ## How the physics world fits into the simulation loop
 
 `Simulation` holds an optional `PhysicsWorld*` member, passed in through the constructor, and steps it every frame scaled by `simulationSpeed` (see above). This keeps `Simulation` usable even without any physics bodies attached (e.g. while testing the camera alone), and `PhysicsWorld::step` in turn advances any attached `PetrovaLine` and the Sun's pulse automatically, so `main.cpp` never calls those directly.
-
-## Suggested next steps
-
-- Add simple collision detection between bodies using `radius` (useful for detecting "impacts" or merging bodies);
-- Replace the O(n²) gravity computation with a Barnes-Hut tree if the number of bodies grows large;
-- Add texture support to `Mesh` (UV coordinates) to map planet textures;
-- Give `PhysicsWorld` (or `CelestialBody`) a way to snapshot and restore each body's initial position/velocity (the way `Camera` already does with `initialParameters`) to allow "resetting" the simulation;
-- `SkySphere` regenerates its whole star field on every setter call - fine at typical star counts, but worth revisiting if `starCount` grows very large;
-- Translucent meshes (the Petrova line's tube) are drawn in the same pass and order as opaque ones; for scenes with more overlapping translucent geometry, sorting translucent draws back-to-front (and/or disabling depth writes for them) would avoid the usual alpha-blending ordering artifacts.

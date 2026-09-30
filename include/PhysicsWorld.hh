@@ -7,9 +7,8 @@
 #include "../include/SkySphere.hh"
 #include <vector>
 
-// Owns no bodies (holds raw pointers to externally-owned CelestialBody instances)
-// and is responsible for computing pairwise gravitational forces between them
-// and stepping their motion forward each frame
+// Holds raw pointers to externally-owned CelestialBody instances, is responsible for computing
+// pairwise gravitational forces between them and stepping their motion forward each frame
 class PhysicsWorld {
     public:
         // --- Class constructor ---
@@ -32,7 +31,7 @@ class PhysicsWorld {
         // Simulation step:
         // ================================================================
         // Computes gravitational forces between every pair of bodies, integrates their
-        // motion, and advances the PetrovaLine (if one is attached) to match.
+        // motion, and advances the PetrovaLine (if one is attached)
         void step(double deltaTime);
 
         // ================================================================
