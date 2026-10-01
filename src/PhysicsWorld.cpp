@@ -67,14 +67,14 @@ void PhysicsWorld::computeGravitationalForces() {
             Vector posA = a->getPosition();
             Vector posB = b->getPosition();
 
-            Vector direction = {posB[0] - posA[0], posB[1] - posA[1], posB[2] - posA[2]};
-            double r = magnitude(direction);
+            Vector direction = subVectors(posB, posA);
+            double d = magnitude(direction);
 
             // Prevents division by zero / extreme forces at very small distances
-            if (r < 1e-6) continue;
+            if (d < 1e-6) continue;
 
             Vector unitDirection = normalize(direction);
-            double forceMagnitude = G * a->getRigidBody().getMass() * b->getRigidBody().getMass() / (r * r);
+            double forceMagnitude = G * a->getRigidBody().getMass() * b->getRigidBody().getMass() / (d * d);
 
             Vector forceOnA = {
                 unitDirection[0] * forceMagnitude,
