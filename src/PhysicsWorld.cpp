@@ -76,12 +76,8 @@ void PhysicsWorld::computeGravitationalForces() {
             Vector unitDirection = normalize(direction);
             double forceMagnitude = G * a->getRigidBody().getMass() * b->getRigidBody().getMass() / (d * d);
 
-            Vector forceOnA = {
-                unitDirection[0] * forceMagnitude,
-                unitDirection[1] * forceMagnitude,
-                unitDirection[2] * forceMagnitude
-            };
-            Vector forceOnB = {-forceOnA[0], -forceOnA[1], -forceOnA[2]};
+            Vector forceOnA = multiplyVectorScalar(unitDirection, forceMagnitude);
+            Vector forceOnB = multiplyVectorScalar(forceOnA, -1.0); // Invert direction for B
 
             a->getRigidBody().applyForce(forceOnA);
             b->getRigidBody().applyForce(forceOnB);
